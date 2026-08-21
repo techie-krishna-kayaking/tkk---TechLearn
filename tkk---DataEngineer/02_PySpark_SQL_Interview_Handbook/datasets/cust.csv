@@ -1,9 +1,0 @@
-cust_id,cust_name,city,age,signup_date
-101,Alice,New York,29,2023-11-01
-102,Bob,Chicago,34,2023-11-15
-103,Charlie,New York,41,2023-12-01
-104,Dave,Boston,25,2023-12-10
-105,Eve,Chicago,38,2024-01-02
-106,Frank,Boston,52,2024-01-05
-107,Grace,New York,30,2024-01-08
-108,Zoe,,27,2024-01-09
