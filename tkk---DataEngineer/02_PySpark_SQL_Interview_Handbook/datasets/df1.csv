@@ -1,0 +1,7 @@
+id,name,category,activity,calories,duration_min,activity_date,city,tags
+10,Judy,Exercise,Weightlifting,300,50,2024-01-10,Seattle,strength|indoor
+13,Karl,Exercise,Boxing,450,40,2024-01-12,Denver,cardio|indoor
+14,Laura,Diet,Snack,150,10,2024-01-12,Denver,meal|healthy
+15,Mallory,Exercise,Hiking,600,120,2024-01-13,Boston,cardio|outdoor
+16,Niaj,Sleep,Nap,,45,2024-01-13,Seattle,rest
+17,Olivia,Exercise,Pilates,220,50,2024-01-14,New York,flexibility|indoor
