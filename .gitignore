@@ -1,0 +1,45 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.egg-info/
+dist/
+build/
+.eggs/
+*.egg
+.venv/
+venv/
+env/
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb_checkpoints
+
+# VS Code
+.vscode/
+*.code-workspace
+
+# MLflow
+mlruns/
+mlartifacts/
+
+# Models / data (too large for git)
+*.pkl
+*.joblib
+*.h5
+*.pt
+*.pth
+*.onnx
+*.parquet
+*.csv
+*.json.gz
+
+# Logs
+*.log
+logs/
