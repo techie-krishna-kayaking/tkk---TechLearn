@@ -47,9 +47,9 @@ This is **not a course**. It is:
 
 | Track | Target Role | Salary Target | Duration |
 |-------|------------|--------------|----------|
-| 🤖 [tkk---AI_Engineer](#-track-1-ai-engineer--1-cr) | AI / ML Engineer | **1 Cr+** | 24 weeks |
-| 🔧 [tkk---DataEngineer](#-track-2-data-engineer--80-lpa-to-1-cr) | Senior / Principal Data Engineer | **80 LPA → 1 Cr** | 20 weeks |
 | 📊 [tkk---DA_Engineer](#-track-3-data-analyst--60-70-lpa) | Senior Data Analyst | **60–70 LPA** | 4 weeks |
+| 🔧 [tkk---DataEngineer](#-track-2-data-engineer--80-lpa-to-1-cr) | Senior / Principal Data Engineer | **80 LPA → 1 Cr** | 20 weeks |
+| 🤖 [tkk---AI_Engineer](#-track-1-ai-engineer--1-cr) | AI / ML Engineer | **1 Cr+** | 24 weeks |
 
 ---
 
