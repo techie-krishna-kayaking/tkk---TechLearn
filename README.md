@@ -43,40 +43,50 @@ This is **not a course**. It is:
 
 ---
 
-## 📁 Three Learning Tracks
+## 📁 Three Learning Tracks (Recommended Sequence)
 
-| Track | Target Role | Salary Target | Duration |
-|-------|------------|--------------|----------|
-| 📊 [tkk---DA_Engineer](#-track-3-data-analyst--60-70-lpa) | Senior Data Analyst | **60–70 LPA** | 4 weeks |
-| 🔧 [tkk---DataEngineer](#-track-2-data-engineer--80-lpa-to-1-cr) | Senior / Principal Data Engineer | **80 LPA → 1 Cr** | 20 weeks |
-| 🤖 [tkk---AI_Engineer](#-track-1-ai-engineer--1-cr) | AI / ML Engineer | **1 Cr+** | 24 weeks |
+| Track | Target Role | Salary Target | Duration | Recommendation |
+|-------|------------|--------------|----------|-----------------|
+| 📊 [tkk---DA_Engineer](#-track-1-data-analyst--60-70-lpa) | Senior Data Analyst | **60–70 LPA** | **4 weeks** | 🌟 **START HERE** — Fastest path to offer |
+| 🔧 [tkk---DataEngineer](#-track-2-data-engineer--80-lpa-to-1-cr) | Senior / Principal Data Engineer | **80 LPA → 1 Cr** | 20 weeks | Level up after DA |
+| 🤖 [tkk---AI_Engineer](#-track-3-ai-engineer--1-cr) | AI / ML Engineer | **1 Cr+** | 24 weeks | Optional frontier track |
 
 ---
 
-## 🤖 Track 1: AI Engineer — 1 Cr+
+## 📊 Track 1: Data Analyst — 60–70 LPA
 
-**Target companies:** Google DeepMind · Meta AI · Amazon · Microsoft · Databricks · Anthropic · OpenAI  
-**What they test:** ML theory from first principles · LLMs & GenAI · ML system design · DSA (same bar as SWE) · Production MLOps
+**🌟 START HERE if you want:**
+- Fastest path to an offer (**4 weeks**)
+- Solid foundation before scaling to DE/AI
+- Immediate 60–70 LPA jobs available
 
-### 8 Chapters
+**Target companies:** Google · Meta · Amazon · Uber · Swiggy · Zomato · Flipkart · Myntra  
+**What they test:** Advanced SQL · Product metrics · A/B testing · Cohort analysis · Python/Pandas · Case studies
 
-| # | Chapter | Key Content |
-|---|---------|------------|
-| 01 | 🐍 **Python for AI** | Generators, decorators (timer/retry/cache), async concurrent API calls, NumPy vectorization, memory profiling |
-| 02 | 🧮 **ML Fundamentals** | Bias-variance in code, L1/L2/ElasticNet comparison, all metrics with trade-offs, stratified K-Fold, all ensemble methods |
-| 03 | 🧠 **Deep Learning & Neural Networks** | MLP from scratch in NumPy, multi-head attention from scratch, backprop math, training tricks, softmax+CE derivation |
-| 04 | 🤖 **LLMs & GenAI** | Full RAG pipeline, LoRA math + code, all prompt engineering patterns, RLHF, hallucination mitigation, agent architecture |
-| 05 | 🏗️ **ML System Design** | Feature store, model server with caching, A/B test framework with stats, PSI drift detector |
-| 06 | 🔧 **MLOps** | MLflow tracking + registry, auto-retraining pipeline with drift triggers, GitHub Actions CI/CD YAML, Dockerfile |
-| 07 | 🗄️ **SQL & Data for AI** | Point-in-time correct features, RFM features, data quality checks, PSI drift in SQL |
-| 08 | ⚡ **DSA for AI Interviews** | 10 patterns, 20+ problems — Two Pointers, Sliding Window, BFS/DFS, DP, Heap + AI-specific (softmax, KNN, vector search) |
+### 9 Chapters
 
-### 600+ Q&A in README covering:
-Python internals · ML theory (bias-variance, regularization, metrics) · Deep learning (backprop, transformers, attention) · LLMs (GPT architecture, RAG, LoRA, RLHF) · ML System Design (recommendations, fraud detection) · MLOps · Statistics · DSA patterns
+| # | Chapter | Key Content | Environment |
+|---|---------|------------|-------------|
+| 01 | 🗄️ **Advanced SQL** | Window functions, recursive CTEs, 9 classic hard problems (sessionization, median, gaps, consecutive days) | Databricks SQL |
+| 02 | 🐍 **Python for Data Analysis** | Pandas wrangling, groupby, merge, apply, data cleaning, EDA with charts | VS Code |
+| 03 | 📐 **Statistics & A/B Testing** | CLT, z-test, t-test, chi-square, sample size calculator, 6 A/B pitfalls | VS Code |
+| 04 | ⚡ **PySpark** | Transformations, aggregations, window functions, broadcast join, AQE, optimization | Databricks |
+| 05 | 🏗️ **Data Modeling** | Star schema DDL, SCD Type 1 & 2, normalization (1NF/2NF/3NF), Data Vault | Databricks SQL |
+| 06 | 📈 **Product Metrics & Business Cases** | DAU/MAU/stickiness, D1/D7/D30 retention, North Star framework, KPI decomposition | Databricks SQL |
+| 07 | 🔄 **Cohort, Retention & Funnel** | Full cohort heatmap, funnel drop-off %, churn analysis, RFM segmentation | Databricks SQL |
+| 08 | 🎲 **Probability & Brain Teasers** | Monty Hall, Birthday problem, Bayes theorem — all with Monte Carlo simulations | VS Code |
+| 09 | 🏢 **End-to-End Case Studies** | Food delivery app: GMV debug, A/B experiment, user segmentation, restaurant scoring | Databricks SQL |
+
+**200+ Q&A in README:** SQL optimization, all metrics explained, cohort analysis frameworks, case study approaches
 
 ---
 
 ## 🔧 Track 2: Data Engineer — 80 LPA to 1 Cr
+
+**🎯 Next level after DA:**
+- Build on SQL/Python foundation from Track 1
+- Master PySpark, system design, streaming
+- 80 LPA baseline → 1 Cr with senior level
 
 **Target companies:** FAANG · Databricks · Stripe · Uber · Zomato · Flipkart · Razorpay  
 **What they test:** PySpark at scale · System design with trade-offs · DSA (medium-hard) · Kafka / Streaming · Behavioral with impact
@@ -104,42 +114,79 @@ Python internals · ML theory (bias-variance, regularization, metrics) · Deep l
 
 ---
 
-## 📊 Track 3: Data Analyst — 60–70 LPA
+## 🤖 Track 3: AI Engineer — 1 Cr+
 
-**Target companies:** Google · Meta · Amazon · Uber · Swiggy · Zomato · Flipkart · Myntra  
-**What they test:** Advanced SQL · Product metrics · A/B testing · Cohort analysis · Python/Pandas · Case studies
+**🚀 Optional advanced frontier track:**
+- Only after mastering DA + DE foundations
+- Frontier labs: Google DeepMind, Anthropic, OpenAI
+- Highest ceiling: 1 Cr+ packages
 
-### 9 Chapters
+**Target companies:** Google DeepMind · Meta AI · Amazon · Microsoft · Databricks · Anthropic · OpenAI  
+**What they test:** ML theory from first principles · LLMs & GenAI · ML system design · DSA (same bar as SWE) · Production MLOps
 
-| # | Chapter | Key Content | Environment |
-|---|---------|------------|-------------|
-| 01 | 🗄️ **Advanced SQL** | Window functions, recursive CTEs, 9 classic hard problems (sessionization, median, gaps, consecutive days) | Databricks SQL |
-| 02 | 🐍 **Python for Data Analysis** | Pandas wrangling, groupby, merge, apply, data cleaning, EDA with charts | VS Code |
-| 03 | 📐 **Statistics & A/B Testing** | CLT, z-test, t-test, chi-square, sample size calculator, 6 A/B pitfalls | VS Code |
-| 04 | ⚡ **PySpark** | Transformations, aggregations, window functions, broadcast join, AQE, optimization | Databricks |
-| 05 | 🏗️ **Data Modeling** | Star schema DDL, SCD Type 1 & 2, normalization (1NF/2NF/3NF), Data Vault | Databricks SQL |
-| 06 | 📈 **Product Metrics & Business Cases** | DAU/MAU/stickiness, D1/D7/D30 retention, North Star framework, KPI decomposition | Databricks SQL |
-| 07 | 🔄 **Cohort, Retention & Funnel** | Full cohort heatmap, funnel drop-off %, churn analysis, RFM segmentation | Databricks SQL |
-| 08 | 🎲 **Probability & Brain Teasers** | Monty Hall, Birthday problem, Bayes theorem — all with Monte Carlo simulations | VS Code |
-| 09 | 🏢 **End-to-End Case Studies** | Food delivery app: GMV debug, A/B experiment, user segmentation, restaurant scoring | Databricks SQL |
+### 8 Chapters
+
+| # | Chapter | Key Content |
+|---|---------|------------|
+| 01 | 🐍 **Python for AI** | Generators, decorators (timer/retry/cache), async concurrent API calls, NumPy vectorization, memory profiling |
+| 02 | 🧮 **ML Fundamentals** | Bias-variance in code, L1/L2/ElasticNet comparison, all metrics with trade-offs, stratified K-Fold, all ensemble methods |
+| 03 | 🧠 **Deep Learning & Neural Networks** | MLP from scratch in NumPy, multi-head attention from scratch, backprop math, training tricks, softmax+CE derivation |
+| 04 | 🤖 **LLMs & GenAI** | Full RAG pipeline, LoRA math + code, all prompt engineering patterns, RLHF, hallucination mitigation, agent architecture |
+| 05 | 🏗️ **ML System Design** | Feature store, model server with caching, A/B test framework with stats, PSI drift detector |
+| 06 | 🔧 **MLOps** | MLflow tracking + registry, auto-retraining pipeline with drift triggers, GitHub Actions CI/CD YAML, Dockerfile |
+| 07 | 🗄️ **SQL & Data for AI** | Point-in-time correct features, RFM features, data quality checks, PSI drift in SQL |
+| 08 | ⚡ **DSA for AI Interviews** | 10 patterns, 20+ problems — Two Pointers, Sliding Window, BFS/DFS, DP, Heap + AI-specific (softmax, KNN, vector search) |
+
+**600+ Q&A in README covering:**
+Python internals · ML theory (bias-variance, regularization, metrics) · Deep learning (backprop, transformers, attention) · LLMs (GPT architecture, RAG, LoRA, RLHF) · ML System Design (recommendations, fraud detection) · MLOps · Statistics · DSA patterns
 
 ---
 
-## ⏰ Which Track Is Right for You?
+## 🎯 Recommended Learning Path
 
+### For 60–70 LPA in 1 month:
 ```
-Do you want to build ML models / LLM systems?     → AI Engineer track (24 weeks)
-Do you want to build data pipelines at scale?     → Data Engineer track (20 weeks)
-Do you want to transition to analytics/strategy?  → Data Analyst track (4 weeks)
+Week 1: DA Track — Chapter 01-02 (SQL + Python)
+Week 2: DA Track — Chapter 03-05 (Stats + Modeling)
+Week 3: DA Track — Chapter 06-07 (Product metrics + Cohort)
+Week 4: DA Track — Chapter 08-09 (Brain teasers + Case study)
+→ Ready for DA interviews at Swiggy, Zomato, Flipkart
+```
 
-Have only 1 month?    → Start with DA track (fastest ROI)
-Have 5+ months?       → DE or AI track (highest salary ceiling)
-Targeting FAANG now?  → AI Engineer track + DE Advanced DSA
+### For 80 LPA+ in 5-6 months:
+```
+Month 1:  DA Track (fast foundation)
+Months 2-3: DE Track — Python, PySpark, DSA, Cloud
+Months 4-5: DE Track — System Design, Kafka, Airflow, Production
+Month 6:  Full mocks + behavioral
+→ Ready for DE interviews at FAANG, Databricks
+```
+
+### For 1 Cr+ in 6+ months:
+```
+Months 1-2: DA Track (foundation)
+Months 3-5: DE Track (scale + architecture)
+Months 6+:  AI Track (ML theory + LLMs + system design)
+→ Ready for AI Engineer at frontier labs
 ```
 
 ---
 
 ## 🏆 What Big Companies Test — By Role
+
+### Data Analyst (Google / Meta / Swiggy / Zomato / Flipkart)
+- Advanced SQL — window functions, sessionization, recursive CTEs
+- Product metrics — define North Star, debug metric drops
+- A/B testing — design, sample size, pitfalls, analysis
+- Case study — "GMV is down 15%, walk me through your approach"
+- Python/Pandas — EDA, data cleaning, cohort analysis
+
+### Data Engineer (FAANG / Databricks / Stripe / Flipkart / Uber)
+- PySpark at scale — query plans, joins, Delta Lake, AQE
+- System design — design a realtime pipeline with fault tolerance
+- DSA — medium difficulty, graphs and DP patterns
+- Production troubleshooting — Spark skew, schema drift, latency
+- Behavioral — quantified impact, leadership, cross-team influence
 
 ### AI Engineer (Google DeepMind / Meta AI / Anthropic)
 - ML theory from first principles — "derive backpropagation"
@@ -149,32 +196,18 @@ Targeting FAANG now?  → AI Engineer track + DE Advanced DSA
 - DSA — same bar as software engineers (medium-hard LeetCode)
 - Research awareness — "discuss a paper you read recently"
 
-### Data Engineer (Databricks / Stripe / Flipkart / Uber)
-- PySpark at scale — query plans, joins, Delta Lake, AQE
-- System design — design a realtime pipeline with fault tolerance
-- DSA — medium difficulty, graphs and DP patterns
-- Production troubleshooting — Spark skew, schema drift, latency
-- Behavioral — quantified impact, leadership, cross-team influence
-
-### Data Analyst (Google / Meta / Swiggy / Zomato / Flipkart)
-- Advanced SQL — window functions, sessionization, recursive CTEs
-- Product metrics — define North Star, debug metric drops
-- A/B testing — design, sample size, pitfalls, analysis
-- Case study — "GMV is down 15%, walk me through your approach"
-- Python/Pandas — EDA, data cleaning, cohort analysis
-
 ---
 
 ## 📈 Expected Outcomes
 
 | Track | Company Type | Success Rate (with full prep) |
 |-------|-------------|-------------------------------|
-| AI Engineer | Google / Meta / Amazon | 60–70% |
-| AI Engineer | Databricks / Stripe / Uber | 75–85% |
-| Data Engineer | FAANG | 70–80% |
-| Data Engineer | Tier-1 Startups | 80–90% |
 | Data Analyst | Google / Meta | 65–75% |
 | Data Analyst | Swiggy / Zomato / Flipkart | 75–85% |
+| Data Engineer | FAANG | 70–80% |
+| Data Engineer | Tier-1 Startups | 80–90% |
+| AI Engineer | Google / Meta / Amazon | 60–70% |
+| AI Engineer | Databricks / Stripe / Uber | 75–85% |
 
 ---
 
@@ -187,17 +220,17 @@ Targeting FAANG now?  → AI Engineer track + DE Advanced DSA
 git clone https://github.com/techie-krishna-kayaking/tkk---TechLearn.git
 cd tkk---TechLearn
 
-# AI Engineer track
-cd tkk---AI_Engineer/
-# Start: Chapter_01_Python_for_AI/01_python_for_ai.py
-
-# Data Engineer track
-cd tkk---DataEngineer/
-# Start: 01_Python_Interview_Handbook/01_Basics.py
-
-# Data Analyst track
+# 🌟 START: Data Analyst track (4 weeks to offer)
 cd tkk---DA_Engineer/
-# Start: Chapter_01_Advanced_SQL/01_window_functions.sql (run in Databricks)
+# Begin: Chapter_01_Advanced_SQL/01_window_functions.sql (run in Databricks)
+
+# After DA: Level up to Data Engineer (20 weeks)
+cd ../tkk---DataEngineer/
+# Begin: 01_Python_Interview_Handbook/01_Basics.py
+
+# Optional: Then AI Engineer (24 weeks)
+cd ../tkk---AI_Engineer/
+# Begin: Chapter_01_Python_for_AI/01_python_for_ai.py
 ```
 
 ### Daily Routine (all tracks)
@@ -240,7 +273,7 @@ cd tkk---DA_Engineer/
 </p>
 
 <p align="center">
-  <a href="tkk---AI_Engineer/README.md">🤖 AI Engineer README</a> &nbsp;|&nbsp;
+  <a href="tkk---DA_Engineer/README.md">📊 Data Analyst README</a> &nbsp;|&nbsp;
   <a href="tkk---DataEngineer/README.md">🔧 Data Engineer README</a> &nbsp;|&nbsp;
-  <a href="tkk---DA_Engineer/README.md">📊 Data Analyst README</a>
+  <a href="tkk---AI_Engineer/README.md">🤖 AI Engineer README</a>
 </p>
