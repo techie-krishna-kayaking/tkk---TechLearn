@@ -10,40 +10,50 @@
   <img src="https://img.shields.io/badge/AWS-232F3E?style=for-the-badge&logo=amazonaws&logoColor=white" />
 </h1>
 
-<h1 align="center">🤖 AI Engineer — Complete 1 Cr+ Interview Prep</h1>
+<h1 align="center">🤖 AI Engineer — Complete 100 LPA to 1.5 Cr Interview Prep</h1>
 
 <p align="center">
-  <b>8 chapters | 600+ interview Q&A | Production-grade Python, ML, LLM, MLOps files</b><br/>
-  <i>Everything asked at Google DeepMind, Meta AI, OpenAI, Amazon, Microsoft, Databricks, Anthropic</i>
+  <b>16 chapters | 700+ interview Q&A | Production-grade Python, ML, LLM, Agents, MLOps + runnable labs</b><br/>
+  <i>Everything asked at Google DeepMind, Meta AI, OpenAI, Anthropic, Amazon, Microsoft, NVIDIA, Databricks</i>
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Chapters-8_Complete-brightgreen?style=flat-square" />
-  <img src="https://img.shields.io/badge/Interview_Q%26A-600%2B-blue?style=flat-square" />
-  <img src="https://img.shields.io/badge/LLM_%26_GenAI-Deep_Dive-purple?style=flat-square" />
-  <img src="https://img.shields.io/badge/ML_System_Design-Production_Grade-red?style=flat-square" />
-  <img src="https://img.shields.io/badge/Study_Plan-24_Weeks-orange?style=flat-square" />
-  <img src="https://img.shields.io/badge/Target-1_Cr%2B-gold?style=flat-square" />
+  <img src="https://img.shields.io/badge/Chapters-16_Complete-brightgreen?style=flat-square" />
+  <img src="https://img.shields.io/badge/Interview_Q%26A-700%2B-blue?style=flat-square" />
+  <img src="https://img.shields.io/badge/LLM_Serving_%26_Agents-Deep_Dive-purple?style=flat-square" />
+  <img src="https://img.shields.io/badge/Runnable_Labs-8_Self_Checking-red?style=flat-square" />
+  <img src="https://img.shields.io/badge/Study_Plan-32_Weeks-orange?style=flat-square" />
+  <img src="https://img.shields.io/badge/Target-100_LPA_to_1.5_Cr-gold?style=flat-square" />
 </p>
 
 ---
 
 ## 📖 What This Is
 
-A **battle-tested interview prep system** for senior AI Engineer roles at FAANG/MAANG and top AI-first companies. This is not a course. This is **what gets you the offer** — 600+ real questions with model answers, production system designs, and code you actually type and run.
+A **battle-tested interview prep system** for senior/staff/principal AI Engineer roles at FAANG/MAANG, top AI-first companies, and frontier labs. Targeting the **₹100–150 LPA** band. This is not a course. This is **what gets you the offer** — 700+ real questions with model answers, production system designs, and **runnable, self-checking code**.
 
 ✅ **Python for AI** — generators, decorators, async, vectorized ops, memory efficiency  
 ✅ **ML Fundamentals** — bias-variance, regularization, metrics, cross-validation — with "why" answered  
 ✅ **Deep Learning** — backprop math, transformers from scratch, training tricks, debugging  
-✅ **LLMs & GenAI** — GPT architecture, RAG, fine-tuning (LoRA/QLoRA), RLHF, prompt engineering, agents  
-✅ **ML System Design** — feature stores, training pipelines, model serving, A/B testing, monitoring  
-✅ **MLOps** — MLflow, CI/CD for ML, Docker, Kubernetes, drift detection, auto-retraining  
-✅ **SQL & Data** — feature engineering in SQL, data pipelines for ML  
-✅ **DSA** — arrays, graphs, DP — the 15 patterns FAANG actually tests  
+✅ **LLMs & GenAI** — GPT architecture, RAG, fine-tuning (LoRA/QLoRA), RLHF, prompt engineering  
+✅ **LLM Inference Optimization** — KV cache, vLLM/PagedAttention, quantization, batching, speculative decoding  
+✅ **Advanced RAG** — hybrid search, reranking, query rewriting, RAGAS evaluation  
+✅ **LLM Agents** — ReAct, tool/function calling, multi-agent, MCP, reliability & failure modes  
+✅ **LLM Eval & Observability (LLMOps)** — LLM-as-judge, regression gates, tracing, cost/latency  
+✅ **Fine-tuning & Alignment** — PEFT/QLoRA, RLHF vs DPO, fine-tune-vs-RAG framework  
+✅ **AI Safety & Guardrails** — prompt injection, PII redaction, OWASP LLM Top 10, output validation  
+✅ **Distributed Training** — DDP/FSDP/ZeRO, tensor/pipeline/3D parallelism, memory math  
+✅ **ML System Design** — feature stores, training pipelines, serving, A/B testing, monitoring  
+✅ **MLOps** — MLflow, CI/CD for ML, Docker/K8s, drift detection, retraining  
+✅ **SQL & Data for AI** — feature engineering, time-series features, pipelines  
+✅ **DSA** — the 15 patterns FAANG actually tests  
+✅ **Senior Behavioral & Negotiation** — STAR-L, leveling, and comp negotiation (worth 20–40 LPA)
+
+> **Why 100–150 LPA needs more than transformers-from-scratch:** at 10 YOE, ML fundamentals are *table stakes* — everyone in the loop clears them. The offer (and your level) is decided by the **specialist differentiators**: serving LLMs to an SLA, production-grade RAG + agents, evaluation you can trust, safety, and training at scale. **Chapters 09–16** are exactly those differentiators, each with a **runnable lab**.
 
 ---
 
-## 📚 8 Chapters Overview
+## 📚 16 Chapters Overview
 
 | # | Chapter | Key Topics | Environment | Priority |
 |---|---------|-----------|-------------|----------|
@@ -55,10 +65,22 @@ A **battle-tested interview prep system** for senior AI Engineer roles at FAANG/
 | **06** | 🔧 **MLOps** | MLflow tracking, CI/CD for ML, Docker/K8s, drift detection, retraining triggers | VS Code / Terminal | 🟡 High |
 | **07** | 🗄️ **SQL & Data for AI** | Feature engineering SQL, time-series features, data quality for ML, pipeline patterns | Databricks SQL | 🟡 High |
 | **08** | ⚡ **DSA for AI Interviews** | 15 patterns, 60+ problems — arrays, hashmaps, trees, graphs, DP — FAANG calibrated | VS Code | 🔴 Critical |
+| **09** | 🚀 **LLM Inference Optimization** | KV cache, PagedAttention/vLLM, quantization (GPTQ/AWQ), continuous batching, speculative decoding, parallelism, TTFT/TPOT | VS Code 🧪 | 🔴 Critical (Senior) |
+| **10** | 🔎 **Advanced RAG** | Hybrid search (BM25+dense), RRF, cross-encoder reranking, query rewriting/HyDE, chunking, RAGAS eval | VS Code 🧪 | 🔴 Critical (Senior) |
+| **11** | 🕹️ **LLM Agents & Tool Use** | ReAct, function calling, planning, multi-agent, memory, MCP, LangGraph, failure modes | VS Code 🧪 | 🔴 Critical (Senior) |
+| **12** | 📏 **LLM Eval & Observability** | Offline eval harness, regression gates, LLM-as-judge (pairwise/debiased), tracing, token cost/latency | VS Code 🧪 | 🔴 Critical (Senior) |
+| **13** | 🎛️ **Fine-tuning & Alignment** | PEFT/LoRA/QLoRA math, RLHF vs DPO vs ORPO, data quality, fine-tune-vs-RAG framework | VS Code 🧪 | 🟡 High (Senior) |
+| **14** | 🛡️ **AI Safety & Guardrails** | Prompt injection (direct/indirect), PII redaction, output validation, OWASP LLM Top 10, jailbreaks | VS Code 🧪 | 🔴 Critical (Senior) |
+| **15** | 🌐 **Distributed Training** | DDP, ZeRO/FSDP, tensor/pipeline/3D parallelism, mixed precision, checkpointing, scaling efficiency | VS Code 🧪 | 🟡 High (Infra) |
+| **16** | 🎯 **Senior Behavioral & Negotiation** | STAR-L stories, AI-specific probes, leveling, **comp/equity negotiation** | Prep workbook 🧪 | 🔴 Critical (Senior) |
+
+> 🧪 = ships with a **runnable, self-checking lab** (`python3 <file>` — asserts its own correctness). **Chapters 01–08** are the foundation (table stakes). **Chapters 09–16** are the **specialist differentiators** that decide the offer and your level in the 100–150 LPA band.
 
 ---
 
-## ⏰ 24-Week Study Plan (1 Cr+ Preparation)
+## ⏰ 32-Week Study Plan (100–150 LPA Preparation)
+
+> Weeks 1–24 build the foundation + core rounds. **Weeks 25–32 layer in the specialist differentiators (Chapters 09–16)** — LLM serving, advanced RAG, agents, eval, fine-tuning, safety, distributed training, and senior behavioral/negotiation. If short on time, compress the foundation, but do **not** skip 09–16: that's where the 100–150 LPA gap is won.
 
 ### **PHASE 1: Python + ML Core (Weeks 1–6)**
 | Week | Focus | Chapter | Daily Time | Goal |
@@ -93,18 +115,42 @@ A **battle-tested interview prep system** for senior AI Engineer roles at FAANG/
 
 ---
 
-### **PHASE 4: DSA + Mock Interviews (Weeks 19–24)**
+### **PHASE 4: DSA + Foundational Mocks (Weeks 19–24)**
 | Week | Focus | Chapter | Daily Time | Goal |
 |------|-------|---------|-----------|------|
 | 19–21 | DSA patterns | Ch08 | 2 hrs | Solve 60+ problems — Two Pointer, Sliding Window, BFS/DFS, DP |
-| 22–23 | Full mock rounds | All | 3 hrs | Timed: DSA (45 min) + ML theory (30 min) + System Design (60 min) |
-| 24 | Behavioral + offer | — | 1.5 hrs | STAR stories with AI impact, negotiation, counter-offer prep |
+| 22–23 | Foundational mock rounds | Ch01–08 | 3 hrs | Timed: DSA (45 min) + ML theory (30 min) + System Design (60 min) |
+| 24 | Consolidation | Ch01–08 | 1.5 hrs | Close gaps in the fundamentals before the specialist phase |
 
-**Milestone:** Pass a complete FAANG-style AI interview loop (4 rounds)
+**Milestone:** Pass a foundational FAANG-style AI loop (DSA + ML theory + system design)
 
 ---
 
-## 🎯 What FAANG/MAANG Tests for AI Engineer (1 Cr+)
+### **PHASE 5: GenAI Specialist Differentiators (Weeks 25–29)** ⭐ *the 100–150 LPA gap*
+| Week | Focus | Chapter | Daily Time | Goal |
+|------|-------|---------|-----------|------|
+| 25 | LLM Inference Optimization | Ch09 🧪 | 2 hrs | Serve a 70B model to an SLA: KV cache, vLLM, quant, batching, spec-decode |
+| 26 | Advanced RAG | Ch10 🧪 | 2 hrs | Hybrid search + reranking + query rewriting + RAGAS eval |
+| 27 | LLM Agents & Tool Use | Ch11 🧪 | 2 hrs | ReAct + function calling + MCP + reliability/failure modes |
+| 28 | LLM Eval & Observability | Ch12 🧪 | 1.5 hrs | Build an eval harness + CI gate + LLM-as-judge + cost/latency tracing |
+| 29 | Fine-tuning + Safety | Ch13 + Ch14 🧪 | 2 hrs | Fine-tune-vs-RAG framework, QLoRA/DPO; injection/PII/OWASP guardrails |
+
+**Milestone:** Whiteboard a production LLM app end-to-end — serving, RAG, agents, eval, and safety — with trade-offs
+
+---
+
+### **PHASE 6: Scale + Senior Signals + Full Loops (Weeks 30–32)**
+| Week | Focus | Chapter | Daily Time | Goal |
+|------|-------|---------|-----------|------|
+| 30 | Distributed Training | Ch15 🧪 | 1.5 hrs | DDP/ZeRO/FSDP + tensor/pipeline/3D parallelism + memory math |
+| 31 | Senior Behavioral + Negotiation | Ch16 🧪 | 1.5 hrs | 8 STAR-L stories; decide level + target total comp; rehearse the counter |
+| 32 | Full specialist mock loops | All | 3 hrs | Timed: DSA + ML system design + LLM system design + behavioral + negotiation |
+
+**Milestone:** Complete a full senior AI loop (incl. LLM system design + negotiation) and land the best offer
+
+---
+
+## 🎯 What FAANG/MAANG Tests for AI Engineer (100–150 LPA)
 
 ### Google / Google DeepMind
 - **ML Theory Deep Dives**: Explain transformers, attention, RLHF, reward modeling
@@ -118,30 +164,36 @@ A **battle-tested interview prep system** for senior AI Engineer roles at FAANG/
 - **Coding**: Same LeetCode bar as SWE — no concessions for AI roles
 - **ML System Design**: Feed ranking, ads prediction, content moderation at scale
 - **A/B Testing**: Statistical significance, online experiments for ML models
-- **LLM + GenAI**: Llama architecture, fine-tuning, inference optimization
+- **LLM + GenAI**: Llama architecture, fine-tuning, **inference optimization** (Ch09), **agents** (Ch11)
 
 ### Amazon (AWS AI + Alexa + Search)
-- **Leadership Principles**: Every round has behavioral with data outcomes
+- **Leadership Principles**: Every round has behavioral with data outcomes (Ch16)
 - **ML Applied**: E-commerce recommendations, fraud detection, forecasting
 - **Coding**: Arrays, trees, graphs — medium difficulty
-- **System Design**: ML pipeline design, SageMaker patterns
+- **System Design**: ML pipeline design, SageMaker patterns, **RAG + guardrails** (Ch10, Ch14)
 - **Data**: Feature stores, data quality, labeling at scale
 
 ### Microsoft (Azure AI + Bing + Copilot)
-- **LLMs**: GPT fine-tuning, RAG, prompt engineering, responsible AI
+- **LLMs**: GPT fine-tuning, **RAG** (Ch10), prompt engineering, **responsible AI / guardrails** (Ch14)
 - **Coding**: Medium LeetCode — OOP design patterns too
-- **ML System Design**: Copilot system, search augmentation with LLMs
-- **Azure ML**: SageMaker/Azure ML equivalents, deployment patterns
+- **ML System Design**: Copilot system, **agentic** search augmentation with LLMs (Ch11)
+- **LLMOps**: **evaluation + observability** (Ch12), Azure ML deployment patterns
 
-### Anthropic / OpenAI (if targeting frontier AI labs)
-- **Deep ML Theory**: Constitutional AI, RLHF, reward hacking, alignment
+### Anthropic / OpenAI / NVIDIA (frontier labs & AI infra)
+- **Deep ML Theory**: Constitutional AI, RLHF vs **DPO** (Ch13), reward hacking, alignment
 - **Research**: Explain recent papers (Chain of Thought, LoRA, FlashAttention)
 - **Coding**: Very strong — production Python, efficient ML code
-- **System Design**: LLM inference at scale, batching, KV cache optimization
+- **System Design**: **LLM inference at scale — batching, KV cache, PagedAttention, speculative decoding** (Ch09)
+- **Training at scale**: **ZeRO/FSDP, tensor/pipeline/3D parallelism** (Ch15)
+- **Evaluation & safety**: rigorous **evals** (Ch12) and **red-teaming/guardrails** (Ch14)
 
 ---
 
-## 🔥 600+ Interview Questions & Answers
+> **Reality check on the number:** ₹100–150 LPA for "AI Engineer" at 10 YOE almost always means **Staff/Principal ML/AI Engineer, Applied Scientist, or GenAI Lead** — and total comp is **equity-heavy** at top product companies and frontier labs. Transformers-from-scratch is table stakes there; the **specialist chapters 09–16** are what move you up a level and up the band. **Get leveled correctly first — comp follows level** (Ch16). No prep guarantees an outcome; results depend on your delivery, the panel, headcount, and how you negotiate.
+
+---
+
+## 🔥 700+ Interview Questions & Answers
 
 ---
 
@@ -323,12 +375,12 @@ A **battle-tested interview prep system** for senior AI Engineer roles at FAANG/
 
 ---
 
-## 🏆 What Interviewers Look For at 1 Cr+ Level
+## 🏆 What Interviewers Look For at the 100–150 LPA Level
 
 ### **Technical Bar (70% of decision)**
 - ✅ Deep ML theory — not just "what" but "why" and "when it breaks"
 - ✅ Systems thinking — design at scale, failure modes, trade-offs
-- ✅ LLM/GenAI fluency — this is now table stakes for AI Engineer roles
+- ✅ LLM/GenAI fluency — **serving, RAG, agents, eval, safety** are the differentiators (Ch09–14)
 - ✅ Production experience — can you debug, monitor, and maintain a model?
 - ✅ Coding quality — clean, efficient, testable Python
 
@@ -342,19 +394,23 @@ A **battle-tested interview prep system** for senior AI Engineer roles at FAANG/
 
 ## 📈 Expected Outcomes
 
-### **If You Study This Fully (24 weeks)**
+### **If You Study This Fully (32 weeks)**
 - ✅ **Pass ML theory rounds** at Google, Meta, Amazon — cold, no notes
 - ✅ **Ace ML system design** — structured, trade-off-aware, production-minded
-- ✅ **LLM/GenAI rounds** — deep enough for frontier AI labs
+- ✅ **Design a production LLM system** — serving to an SLA, RAG, agents, eval, safety
+- ✅ **Discuss training at scale** — ZeRO/FSDP, 3D parallelism, memory math
 - ✅ **DSA rounds** — solve medium problems in < 20 minutes
-- ✅ **Negotiate confidently** — understand your market value, counter-offer
+- ✅ **Negotiate confidently** — leveling, total comp, equity
 
-### **Success Rate by Company (with full prep)**
-- Google / Google DeepMind: **60–70% for AI/ML Engineer roles**
-- Meta AI: **65–75% for AI/ML Engineer roles**
-- Amazon / Microsoft: **70–80% for senior AI roles**
-- Anthropic / OpenAI (applied/infra): **50–65% (very high bar)**
-- Databricks / Stripe / Uber: **75–85% for senior AI/ML roles**
+### **A Note on "Success Rates" (be realistic)**
+No prep guarantees an outcome — results depend on your delivery, the panel, headcount, timing, and how you're leveled and how you negotiate. Treat the following as **directional confidence** *if* you complete all 32 weeks, can **perform** (not just recognize) the content, and interview at the right level:
+
+- Google / DeepMind, Meta AI (senior/staff): **competitive; expect a very high ML-theory + system-design bar**
+- Amazon / Microsoft (senior AI): **strong fit — applied ML + LLM apps + LPs map directly**
+- Anthropic / OpenAI / NVIDIA (applied/infra): **highest bar; Ch09/Ch15 inference + training depth is essential**
+- Databricks / Stripe / Uber / AI-first unicorns (senior/staff): **strong fit, especially with the GenAI specialist chapters**
+
+> The single biggest lever is **being interviewed and leveled correctly** — at 10 YOE, ₹100–150 LPA is a Staff/Principal/Lead band where **equity dominates total comp**. Chapters 09–16 build the signal that gets you there; Ch16 helps you capture it in the offer.
 
 ---
 
@@ -374,6 +430,22 @@ cd Chapter_01_Python_for_AI/
 python 01_python_for_ai.py
 ```
 
+### **Runnable labs (Chapters 09–16)** 🧪
+Chapters 09–16 ship with **executable, self-checking labs** — you learn the hard senior
+topics by running them, and each file **asserts its own correctness** (needs only `numpy`):
+```bash
+pip install numpy
+python3 Chapter_09_LLM_Inference_Optimization/01_inference_optimization.py   # KV cache, vLLM, quant, spec-decode
+python3 Chapter_10_Advanced_RAG/01_advanced_rag.py                          # hybrid search + rerank + RAGAS
+python3 Chapter_11_LLM_Agents/01_agents_and_tool_use.py                     # ReAct + tools + MCP + guards
+python3 Chapter_12_LLM_Evaluation_and_Observability/01_llm_eval_and_observability.py  # eval gate + judge + cost
+python3 Chapter_13_Fine_Tuning_and_Alignment/01_finetuning_and_alignment.py # LoRA/QLoRA + DPO math
+python3 Chapter_14_AI_Safety_and_Guardrails/01_safety_and_guardrails.py     # injection + PII + OWASP
+python3 Chapter_15_Distributed_Training/01_distributed_training.py          # DDP/ZeRO/FSDP + 3D parallelism
+python3 Chapter_16_Senior_Behavioral_and_Negotiation/01_behavioral_and_negotiation.py  # STAR-L + negotiation
+```
+Every lab runs in seconds on CPU — no GPU, no API keys, no network required.
+
 ### **Daily Routine**
 - **1.5–2 hours:** Study chapter + type all code (never copy-paste)
 - **30–45 minutes:** Solve 1–2 DSA problems (Chapter 08)
@@ -391,10 +463,13 @@ python 01_python_for_ai.py
 
 ### **Before the Interview**
 - ☐ Know the company's AI products and recent papers/blog posts
-- ☐ Have 3 impact stories: "I built X, it improved Y by Z%"
+- ☐ Have 3 impact stories: "I built X, it improved Y by Z%" (STAR-L, Ch16)
 - ☐ Can implement attention mechanism from scratch
 - ☐ Can design a recommendation or fraud detection system in 45 min
-- ☐ Know current LLM landscape: GPT-4o, Claude 3.5, Llama 3, Gemini
+- ☐ Can design a **production LLM system**: serving to an SLA + RAG + agents + eval + guardrails (Ch09–14)
+- ☐ Can explain **fine-tune vs RAG**, **DPO vs RLHF**, and **ZeRO/FSDP** (Ch13, Ch15)
+- ☐ Know current LLM landscape: GPT-4o, Claude 3.5/3.7, Llama 3, Gemini, and serving stacks (vLLM/TGI)
+- ☐ Decided your **level + target total comp** with market data (Ch16)
 
 ### **During the Interview**
 - ☐ Clarify problem scope and constraints before answering
@@ -410,7 +485,7 @@ python 01_python_for_ai.py
 
 ---
 
-## 💡 Pro Tips for 1 Cr+ Offers
+## 💡 Pro Tips for 100–150 LPA Offers
 
 1. **Read papers, not just blogs** — mention arxiv papers in interviews (FlashAttention, LoRA, Chain-of-Thought)
 2. **Build and deploy something** — a RAG app, fine-tuned model, or ML API on HuggingFace Spaces
@@ -418,10 +493,11 @@ python 01_python_for_ai.py
 4. **System design > algorithm** — at senior level, systems thinking outweighs LeetCode
 5. **Quantify everything** — never say "faster" or "better" — say "40% latency reduction" or "2× throughput"
 6. **Stay current** — the LLM field moves weekly; read Papers With Code, Hugging Face blog, Anthropic/OpenAI research
+7. **Get leveled right, then negotiate total comp** — at this band equity dominates; a level bump beats any base haggling (Ch16)
 
 ---
 
 <p align="center">
   <b>Best of luck with your interviews! 🚀</b><br/>
-  <i>You've got this. Preparation = Confidence = 1 Cr+</i>
+  <i>You've got this. Preparation = Confidence = your best offer 🚀</i>
 </p>

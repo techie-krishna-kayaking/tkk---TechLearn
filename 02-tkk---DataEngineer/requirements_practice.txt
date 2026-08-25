@@ -1,0 +1,18 @@
+# Python dependencies for the RUNNABLE practice files in Handbooks 17-22.
+# Install with:  pip install -r requirements_practice.txt
+#
+# Handbook 17 (SCD2/star schema)      -> duckdb
+# Handbook 18 (advanced SQL)          -> duckdb
+# Handbook 19 (lakehouse concepts)    -> duckdb   (local, JVM-free)
+#   real Delta demo (03_*_databricks.py) additionally needs: pyspark delta-spark + Java
+# Handbook 20 (data quality checks)   -> stdlib only
+# Handbook 21 (DataOps sample project)-> pytest (+ ruff for lint)
+# Handbook 22 (distributed sims)      -> stdlib only
+
+duckdb>=1.0
+pytest>=7.4
+ruff>=0.4
+
+# Optional — only for the REAL Delta Lake demo (needs a Java 11/17 runtime):
+# pyspark>=3.5
+# delta-spark>=3.0

@@ -1,0 +1,14 @@
+# Python dependency for the RUNNABLE labs in Chapters 09-16.
+# Every lab runs on CPU in seconds — no GPU, no API keys, no network.
+# Install with:  pip install -r requirements_labs.txt
+#
+# Ch09 Inference Optimization   -> numpy
+# Ch10 Advanced RAG             -> numpy (deterministic hashlib embeddings)
+# Ch11 LLM Agents              -> stdlib only
+# Ch12 LLM Eval & Observability -> stdlib only
+# Ch13 Fine-tuning & Alignment  -> numpy
+# Ch14 AI Safety & Guardrails   -> stdlib only
+# Ch15 Distributed Training     -> numpy
+# Ch16 Behavioral & Negotiation -> stdlib only
+
+numpy>=1.24
