@@ -1,0 +1,4 @@
+# Runtime deps are intentionally minimal (pure-Python transform).
+# Dev/test deps:
+pytest>=7.4
+ruff>=0.4

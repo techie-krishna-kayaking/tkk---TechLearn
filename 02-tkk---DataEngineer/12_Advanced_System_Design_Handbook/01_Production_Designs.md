@@ -2,7 +2,7 @@
 ADVANCED SYSTEM DESIGN FOR DATA ENGINEERS
 Production Designs with Trade-offs, Cost Analysis, and Troubleshooting
 
-Target: 70-80 LPA senior roles at FAANG, Databricks, Unicorns
+Target: 80-120 LPA senior/staff/principal roles at FAANG, Databricks, Netflix, Uber, Unicorns
 Interview Length: 45-60 minutes per design
 Format: CLARIFY → HIGH-LEVEL → DEEP DIVE → TRADE-OFFS → COST
 

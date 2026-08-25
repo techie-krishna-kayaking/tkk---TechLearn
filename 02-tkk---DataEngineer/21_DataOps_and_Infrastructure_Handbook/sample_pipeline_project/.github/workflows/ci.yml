@@ -1,0 +1,55 @@
+# CI for a data pipeline: lint -> unit tests -> data-quality tests -> build image.
+# Nothing merges unless every stage is green (shift-left quality gate).
+name: pipeline-ci
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: 02_Hands_On_Sample_Project/sample_pipeline_project
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Lint
+        run: ruff check pipeline tests
+
+      - name: Unit tests
+        run: pytest tests/test_transform.py -q
+
+      - name: Data-quality tests
+        run: pytest tests/test_data_quality.py -q
+
+  build-image:
+    needs: test          # only build if tests pass
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build Docker image
+        run: docker build -t sample-pipeline:${{ github.sha }} .
+      # - name: Scan image for vulnerabilities
+      #   uses: aquasecurity/trivy-action@master
+      # - name: Push to registry (ECR/GCR) on main
+      #   if: github.ref == 'refs/heads/main'
+      #   run: echo "docker push ..."
+
+  # deploy:
+  #   needs: build-image
+  #   if: github.ref == 'refs/heads/main'
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - run: terraform -chdir=terraform apply -auto-approve   # gated infra
+  #     - run: echo "deploy DAG / job (blue-green or canary)"
