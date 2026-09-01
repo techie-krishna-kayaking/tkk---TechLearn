@@ -1,0 +1,18 @@
+name: qa-quality-gate
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  reconciliation-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Run dependency-free data QA checks
+        working-directory: 04-tkk---QA_DWH_ETL_AI_Agentic
+        run: python -m unittest discover -s shared/automation/tests -v
