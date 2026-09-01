@@ -1,2 +1,0 @@
-# The included automation sample uses only the Python standard library.
-# Add pinned tool dependencies here only when a lab explicitly requires them.

@@ -1,0 +1,3 @@
+# Practice files are intentionally standard-library first.
+# Install only when you extend a handbook with a real integration environment.
+# Suggested additions: pytest, requests, duckdb, great-expectations, locust.

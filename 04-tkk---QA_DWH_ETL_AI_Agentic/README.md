@@ -4,23 +4,20 @@
   <img src="https://img.shields.io/badge/Python-Test_Automation-3776AB?style=for-the-badge&logo=python&logoColor=white" />
   <img src="https://img.shields.io/badge/ETL-DWH_Testing-F97316?style=for-the-badge&logo=apacheairflow&logoColor=white" />
   <img src="https://img.shields.io/badge/Apache_Spark-Big_Data_QA-E25A1C?style=for-the-badge&logo=apachespark&logoColor=white" />
-  <img src="https://img.shields.io/badge/ML-Model_Testing-FF6F00?style=for-the-badge&logo=scikitlearn&logoColor=white" />
   <img src="https://img.shields.io/badge/LLM-RAG_%26_Agent_Testing-412991?style=for-the-badge&logo=openai&logoColor=white" />
-  <img src="https://img.shields.io/badge/CI%2FCD-Quality_Gates-2088FF?style=for-the-badge&logo=githubactions&logoColor=white" />
 </h1>
 
-<h1 align="center">🧪 Data + AI QA Engineer — Senior / Lead / Architect Prep</h1>
+<h1 align="center">🧪 Data + AI QA Engineer — Complete Senior / Lead / Architect Handbook</h1>
 
 <p align="center">
-  <b>16 QA-first modules | ETL, DWH, Big Data, ML, LLM, RAG & Agent testing | templates, test data, automation & enterprise capstone</b><br/>
-  <i>Learn to design quality around complex data and AI systems — not to build those systems.</i>
+  <b>22 handbooks | Data, ETL, DWH, Big Data, ML, LLM, RAG & Agentic AI QA | executable practice + enterprise QA-platform capstone</b><br/>
+  <i>Everything you need to answer: “How would you test this system?”</i>
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Modules-16_Complete-brightgreen?style=flat-square" />
+  <img src="https://img.shields.io/badge/Handbooks-22_Complete-brightgreen?style=flat-square" />
   <img src="https://img.shields.io/badge/Focus-80--90%25_QA-blue?style=flat-square" />
-  <img src="https://img.shields.io/badge/Test_Assets-Templates_%2B_Data-purple?style=flat-square" />
-  <img src="https://img.shields.io/badge/Automation-Dependency_Free-red?style=flat-square" />
+  <img src="https://img.shields.io/badge/Practice-Dependency_Free-red?style=flat-square" />
   <img src="https://img.shields.io/badge/Study_Plan-24_Weeks-orange?style=flat-square" />
   <img src="https://img.shields.io/badge/Capstone-Enterprise_QA_Platform-gold?style=flat-square" />
 </p>
@@ -29,159 +26,74 @@
 
 ## 📖 What This Is
 
-A QA/testing and quality-engineering preparation system for **Data QA Engineers, ETL Test Engineers, Data Warehouse Test Engineers, Big Data QA Engineers, ML Test Engineers, AI/LLM/RAG/Agentic AI Test Engineers, Test Automation Engineers, QA Leads, Test Leads and Test Architects**.
+A complete preparation system for **QA Engineer, Test Engineer, Senior QA Engineer, Data QA Engineer, ETL Test Engineer, Data Warehouse Test Engineer, Big Data QA Engineer, ML Test Engineer, AI/LLM/RAG/Agentic AI Test Engineer, Test Automation Engineer, QA Lead, Test Lead and Test Architect** roles.
 
-The repository trains one central answer:
+This is deliberately **not** a Data Engineer, Data Scientist, ML Engineer, AI Engineer, Agent Developer, BI Developer or software-development curriculum. Technology is taught only to the degree required to understand the SUT, identify risk and validate quality.
 
-> **“How would you test this system?”**
+For every system, practice:
 
-Every module is **80–90% QA/Quality Engineering**: strategy, risk, scenarios, cases, data, validation, reconciliation, automation, non-functional testing, quality gates, observability and production investigation. Only 10–20% is the technical context needed to test well.
+```text
+Understand SUT → identify quality risks → design test strategy → create test data
+→ validate / automate → investigate evidence → release gate → monitor production
+```
 
-✅ **QA Foundations** — SUT boundary, risk, test strategy, traceability, release governance  
-✅ **SQL & Data Validation** — schema, keys, nulls, rules, control totals, reconciliation  
-✅ **ETL / ELT Testing** — full/incremental loads, idempotency, restart, backfill, recovery  
-✅ **DWH & BI Testing** — dimensions, facts, SCDs, measures, dashboards, row-level security  
-✅ **Python Test Automation** — maintainable validators, assertions, evidence and CI execution  
-✅ **API & Integration Testing** — contracts, auth, idempotency, async workflows, consistency  
-✅ **Spark & Big Data Testing** — partitions, shuffles, skew, schema changes, distributed failures  
-✅ **Streaming Testing** — ordering, watermarking, deduplication, state, replay and dead letters  
-✅ **Data Quality & Observability** — freshness, volume, lineage, anomaly detection and gates  
-✅ **ML Model Testing** — data, features, labels, leakage, metrics, robustness, drift, fairness  
-✅ **LLM / GenAI Testing** — golden sets, correctness, groundedness, safety, privacy, cost  
-✅ **RAG Testing** — ingestion, chunking, retrieval, citations, answer quality and access control  
-✅ **Agentic AI Testing** — task success, tools, authorization, memory, retries, loops, recovery  
-✅ **Performance, Security & Reliability** — SLOs, load, P99, PII, fault injection, resilience  
-✅ **CI/CD & Test Architecture** — layered gates, evidence, waivers, rollback and test platform design  
-✅ **Production Troubleshooting & Interviews** — incident investigation, leadership and architect answers
-
-> **Absolute scope:** this is not training for Data Engineers, Data Scientists, ML Engineers, AI Engineers, RAG Engineers, Agent Developers, BI Developers or Software Developers. You learn enough of their systems to test, challenge and assure them.
+✅ Test strategy, risk assessment, scenarios, cases and traceability  
+✅ SQL, schema, rules, data profiling and source-to-target reconciliation  
+✅ ETL/ELT, DWH, BI, API, Spark, streaming and cloud-platform testing  
+✅ Python validation automation and CI/CD quality gates  
+✅ Data quality, governance, lineage, observability and incident response  
+✅ Performance, security, privacy, reliability, recovery and resilience testing  
+✅ ML training/inference, LLM, RAG and agentic-AI evaluation/testing  
+✅ Production troubleshooting, QA system design and quality leadership  
+✅ Enterprise QA-platform capstone with PASS / FAIL / BLOCK evidence
 
 ---
 
-## 📚 16 Modules Overview
+## 📚 22 Handbook Roadmap
 
-| # | Module | Key Topics | Practice Asset | Priority |
-|---|---|---|---|---|
-| **01** | 🧭 **[QA Foundations](01_QA_Foundations_for_Data_and_AI/README.md)** | SUT boundaries, risk, traceability, release decisions | Risk register + strategy | 🔴 Critical |
-| **02** | 🗃️ **[SQL & Data Validation](02_SQL_and_Data_Validation/README.md)** | Schema, keys, nulls, integrity, business rules, reconciliation | Good/bad order datasets | 🔴 Critical |
-| **03** | 🔄 **[ETL & ELT Testing](03_ETL_and_ELT_Testing/README.md)** | Incrementals, CDC, retries, backfills, idempotency, recovery | ETL test design | 🔴 Critical |
-| **04** | 🏛️ **[DWH & BI Testing](04_Data_Warehouse_and_BI_Testing/README.md)** | Facts, dimensions, SCDs, measures, filters, RLS | Source-to-dashboard evidence | 🔴 Critical |
-| **05** | 🐍 **[Python Test Automation](05_Python_Test_Automation/README.md)** | Validators, assertions, deterministic data, reports | Runnable reconciliation test | 🔴 Critical |
-| **06** | 🔌 **[API & Integration Testing](06_API_and_Integration_Testing/README.md)** | Contracts, auth, pagination, idempotency, timeouts | API test matrix | 🟡 High |
-| **07** | ⚡ **[Spark & Big Data Testing](07_Spark_and_Big_Data_Testing/README.md)** | Partitions, shuffle, skew, executor failures, performance | Partition/SLA checks | 🟡 High |
-| **08** | 📡 **[Streaming Testing](08_Streaming_and_Data_Pipeline_Testing/README.md)** | Ordering, watermarks, replay, state, duplicates | Event-to-sink reconciliation | 🟡 High |
-| **09** | 📈 **[Data Quality & Observability](09_Data_Quality_Observability_and_Reconciliation/README.md)** | Freshness, volume, schema, lineage, alerting, MTTD/MTTR | Alert runbook | 🔴 Critical |
-| **10** | 🧠 **[ML Model Testing](10_ML_Model_Testing/README.md)** | Leakage, features, metrics, slices, robustness, drift | Model QA strategy | 🟡 High |
-| **11** | 🤖 **[LLM & GenAI Testing](11_LLM_and_GenAI_Testing/README.md)** | Golden datasets, correctness, safety, privacy, latency/cost | Evaluation rubric | 🔴 Critical |
-| **12** | 🔎 **[RAG Testing](12_RAG_Testing/README.md)** | Retrieval, context, citation, groundedness, access control | RAG golden set | 🔴 Critical |
-| **13** | 🕸️ **[Agentic AI Testing](13_Agentic_AI_Testing/README.md)** | Planning, tools, authorization, memory, loops, recovery | Agent failure suite | 🔴 Critical |
-| **14** | 🛡️ **[Performance, Security & Reliability](14_Performance_Security_and_Reliability/README.md)** | Load, P95/P99, PII, failover, chaos | Non-functional plan | 🔴 Critical |
-| **15** | 🚦 **[CI/CD & Test Architecture](15_CICD_Quality_Gates_and_Test_Architecture/README.md)** | Gates, evidence, flaky-test policy, rollback | GitHub Actions gate | 🔴 Critical |
-| **16** | 🎯 **[Troubleshooting & Interviews](16_Production_Troubleshooting_and_Interview_Prep/README.md)** | Incident triage, root cause, leadership communication | Timed architect answer | 🔴 Critical |
-
-> 🧪 The repository ships a small, **dependency-free reconciliation lab** in [`shared/automation`](shared/automation). It demonstrates QA validation architecture—not a software-development exercise.
-
----
-
-## ⏰ 24-Week Study Plan — QA Architect Track
-
-> The first half establishes data-quality fundamentals. The second half adds AI quality, non-functional, architecture and leadership depth. Do not treat LLM/RAG/agent testing as prompt writing: the differentiator is an evidence-backed evaluation and release strategy.
-
-### **PHASE 1: Core Data QA (Weeks 1–5)**
-
-| Week | Focus | Modules | Goal |
-|---|---|---|---|
-| 1 | QA foundations and risk | 00–01 | Produce a risk-based strategy and release criteria |
-| 2 | SQL/data validation | 02 | Reconcile keys, records, rules and aggregates |
-| 3–4 | ETL/ELT and DWH | 03–04 | Test incrementals, SCDs, backfills and dashboard correctness |
-| 5 | Automation | 05 | Automate representative validation with readable failure output |
-
-**Milestone:** Explain how you would test a daily pipeline from source file to executive dashboard, including safe rerun and failed-load recovery.
-
----
-
-### **PHASE 2: Distributed and Integrated Systems (Weeks 6–9)**
-
-| Week | Focus | Modules | Goal |
-|---|---|---|---|
-| 6 | APIs and integration | 06 | Verify contracts, security and API-to-persistence consistency |
-| 7 | Spark / big data | 07 | Design correctness and performance tests for distributed jobs |
-| 8 | Streaming | 08 | Validate late, duplicate, out-of-order and replayed events |
-| 9 | Observability | 09 | Define monitors, alerts, runbooks and quality gates |
-
-**Milestone:** Lead an investigation where a pipeline is technically green but delivers stale, incomplete business data.
-
----
-
-### **PHASE 3: ML + GenAI Quality Engineering (Weeks 10–15)**
-
-| Week | Focus | Modules | Goal |
-|---|---|---|---|
-| 10–11 | ML testing | 10 | Cover data/feature/metric defects, slices, drift and regression |
-| 12 | LLM quality | 11 | Build a golden dataset and calibrated evaluation rubric |
-| 13 | RAG quality | 12 | Separate retrieval, context and generation defects with evidence |
-| 14 | Agent testing | 13 | Test tools, authority, memory, loops, failure and recovery |
-| 15 | AI regression gate | 10–13 | Define promotion thresholds and human-review/rollback rules |
-
-**Milestone:** Whiteboard a release-quality strategy for an enterprise RAG agent that can access sensitive warehouse data but cannot take unapproved action.
-
----
-
-### **PHASE 4: Quality Architecture + Senior Signals (Weeks 16–20)**
-
-| Week | Focus | Modules | Goal |
-|---|---|---|---|
-| 16–17 | Non-functional QA | 14 | Set SLOs and execute performance, security and resilience strategy |
-| 18 | CI/CD quality platform | 15 | Design layered gates, evidence and a controlled waiver process |
-| 19 | Production troubleshooting | 16 | Run evidence-first incident triage and define CAPA |
-| 20 | Timed mock | 01–16 | Deliver a 45-minute senior QA system-design answer |
-
-**Milestone:** Defend a PASS / FAIL / BLOCK decision with data, test evidence, risk and a recovery plan.
-
----
-
-### **PHASE 5: Capstone + Interview Loop (Weeks 21–24)**
-
-| Week | Focus | Deliverable |
+| # | Handbook | QA outcome |
 |---|---|---|
-| 21 | SUT, risk and strategy | Context diagram, risk register, master test strategy |
-| 22 | Data/API/BI validation | Test data, reconciliation and defects |
-| 23 | AI evaluation and NFR | ML/LLM/RAG/agent suites, security/performance plan |
-| 24 | Quality governance | CI/CD gates, dashboard, incident evidence and presentation |
-
-**Milestone:** Complete the [Enterprise Data & AI QA Platform capstone](Capstone_Enterprise_Data_AI_QA_Platform/README.md) and present it as a senior quality leader.
-
----
-
-## 🔥 Senior QA Interview Questions & Answer Framework
-
-### Q1. How would you test an ETL pipeline end to end?
-
-> Start with the data contract and business rules. Cover ingestion, schema, record/key counts, nulls, duplicates, transformations, reject handling, incremental behavior, idempotent reruns, source-to-target reconciliation, SLA, failure/recovery and production observability. State the oracle and approved tolerance for every check, then define the release gate.
-
-### Q2. Source and target row counts match, but finance reports wrong revenue. What do you do?
-
-> Do not stop at count reconciliation. Compare primary-key coverage, duplicate rates, join cardinality, filters, date/timezone logic, currency/rounding, status mapping and aggregate totals by business slice. Trace a discrepant transaction across source, staging, target and BI semantic layer. Preserve evidence before rerunning anything.
-
-### Q3. How do you test an LLM feature when there is no exact expected answer?
-
-> Use a versioned golden set with criteria such as correctness, groundedness, completeness, citation quality, safety and format compliance. Prefer deterministic assertions where possible; use human-reviewed rubrics for subjective quality; calibrate an LLM judge against human labels; retain prompt, model, parameters, context and evaluator results.
-
-### Q4. How would you test a RAG system?
-
-> Test stages separately: source ingestion and permissions, chunking/index freshness, retrieval recall/ranking, context assembly, generation groundedness and citation correctness. Include stale data, ambiguous queries, access-control boundaries, malicious source documents, retrieval misses and hallucinations with correct retrieval.
-
-### Q5. What changes when testing an agentic AI system?
-
-> Standard API principles remain—contracts, negative cases, authorization, observability and recovery—but the test surface expands to planning, tool selection, arguments, state/memory, loops, retries, timeouts, side effects, multi-agent conflicts and traceability. A green final text is not enough: the path and authority used to produce it must also be acceptable.
-
-### Q6. What is your release recommendation when coverage is high but a critical quality signal is unknown?
-
-> **BLOCK** unless an explicitly authorized risk owner accepts a time-bound waiver with compensating controls. Test coverage measures execution, not confidence. If critical reconciliation, safety, security, performance or observability evidence is missing, the decision cannot be evidence-based.
+| 01 | [QA & Testing Foundations](01_QA_Testing_Foundations_Handbook/01_QA_Foundations_and_Test_Strategy.md) | Risk-based strategy and release decision |
+| 02 | [SQL & Data Validation](02_SQL_Data_Validation_Handbook/01_SQL_Data_Validation_Guide.md) | Trusted data evidence and reconciliation |
+| 03 | [Python Test Automation](03_Python_Test_Automation_Handbook/01_Python_for_Data_QA.md) | Reusable, deterministic validators |
+| 04 | [ETL / ELT Testing](04_ETL_ELT_Testing_Handbook/01_ETL_ELT_Testing_Guide.md) | Incremental, retry, backfill and recovery assurance |
+| 05 | [DWH & BI Testing](05_Data_Warehouse_BI_Testing_Handbook/01_DWH_BI_Testing_Guide.md) | Facts, dimensions, SCDs, metrics and dashboards |
+| 06 | [API & Integration Testing](06_API_Integration_Testing_Handbook/01_API_Integration_Testing.md) | Contracts, auth, async behavior and consistency |
+| 07 | [Big Data & Spark Testing](07_Big_Data_Spark_Testing_Handbook/01_Spark_Big_Data_Testing.md) | Distributed correctness, skew and performance |
+| 08 | [Kafka & Streaming Testing](08_Kafka_Streaming_Testing_Handbook/01_Streaming_Testing.md) | Ordering, state, replay and event reconciliation |
+| 09 | [Cloud Data Platform Testing](09_Cloud_Data_Platform_Testing_Handbook/01_Cloud_Data_Platform_Testing.md) | IAM, resilience, audit and cloud failure testing |
+| 10 | [Data Quality, Governance & Observability](10_Data_Quality_Governance_Observability_Handbook/01_Data_Quality_Governance_Observability.md) | Quality gates, lineage, alerts and runbooks |
+| 11 | [Performance & Resilience Testing](11_Performance_Resilience_Testing_Handbook/01_Performance_Resilience_Testing.md) | Load, P99, backpressure, recovery and SLO evidence |
+| 12 | [Security & Privacy Testing](12_Security_Privacy_Testing_Handbook/01_Security_Privacy_Testing.md) | Least privilege, PII and safe-failure validation |
+| 13 | [ML Testing](13_ML_Testing_Handbook/01_ML_Model_Testing.md) | Data/model/metric, robustness and drift QA |
+| 14 | [LLM & GenAI Testing](14_LLM_GenAI_Testing_Handbook/01_LLM_GenAI_Testing.md) | Golden sets, safety, privacy and regression gates |
+| 15 | [RAG Testing](15_RAG_Testing_Handbook/01_RAG_Testing.md) | Retrieval, grounding, citations and access control |
+| 16 | [Agentic AI Testing](16_Agentic_AI_Testing_Handbook/01_Agentic_AI_Testing.md) | Tools, authority, memory, loops and recovery |
+| 17 | [AI Observability & Evaluation](17_AI_Observability_Evaluation_Handbook/01_AI_Observability_Evaluation.md) | Traceable online/offline quality signals |
+| 18 | [CI/CD & Test Architecture](18_CICD_Test_Architecture_Handbook/01_CICD_Test_Architecture.md) | Layered gates, artifacts, waivers and rollback |
+| 19 | [Production Troubleshooting](19_Production_Troubleshooting_Handbook/01_Production_Troubleshooting.md) | Evidence-first incident leadership |
+| 20 | [Data & AI QA System Design](20_Data_AI_QA_System_Design_Handbook/01_Data_AI_QA_System_Design.md) | Architect-level quality platform design |
+| 21 | [Behavioral & Leadership](21_Behavioral_Leadership_Handbook/01_Behavioral_Leadership.md) | Senior QA stories and stakeholder influence |
+| 22 | [Enterprise QA Platform Capstone](22_Enterprise_QA_Platform_Capstone/01_Capstone_Guide.md) | Portfolio-quality end-to-end deliverable |
 
 ---
 
-## 🏗️ The Capstone: Quality Platform Around the SUT
+## ⏰ 24-Week Learning Plan
+
+| Phase | Weeks | Handbooks | Milestone |
+|---|---:|---|---|
+| Data QA core | 1–5 | 01–05 | Test source-to-dashboard data with reconciliation and recovery |
+| Integrated systems | 6–10 | 06–10 | Design API/streaming/cloud quality gates and runbooks |
+| Non-functional QA | 11–12 | 11–12 | Defend performance, security and privacy acceptance criteria |
+| AI quality | 13–17 | 13–17 | Release-gate an ML/LLM/RAG/agent system with evaluation evidence |
+| QA architecture | 18–20 | 18–20 | Present a quality-platform system design and incident strategy |
+| Portfolio + interviews | 21–24 | 21–22 | Complete the capstone and rehearse leadership answers |
+
+> The senior differentiator is not just knowing a tool. It is turning uncertain system behavior into measurable evidence, a clear risk decision and a production feedback loop.
+
+---
+
+## 🏗️ Capstone Identity
 
 ```text
 Enterprise Data / AI System Under Test
@@ -190,90 +102,56 @@ Enterprise Data / AI System Under Test
                               v
                  +--------------------------+
                  |       QA PLATFORM        |
-                 | Data / ETL validation    |
-                 | Reconciliation           |
-                 | API and integration QA   |
-                 | ML / LLM / RAG eval      |
-                 | Agent safety evaluation  |
-                 | Performance / security   |
-                 | Regression + CI/CD gates |
+                 | validation / recon       |
+                 | API / NFR / security     |
+                 | ML / LLM / RAG / agent   |
+                 | CI/CD gates / evidence   |
                  +--------------------------+
                               |
                               v
                      PASS / FAIL / BLOCK
 ```
 
-Your capstone is the [QA platform and its evidence](Capstone_Enterprise_Data_AI_QA_Platform/README.md), not an enterprise data or AI application. Required outputs include strategy, architecture, test cases, test data, validation utilities, defect evidence, evaluation suites, quality metrics and release gates.
+The candidate builds the **quality platform around the enterprise system**, never the enterprise data/AI platform itself.
+
+## ✅ Complete QA Asset Pack
+
+Each of the 22 handbooks includes a QA guide, test design/catalog, practice exercise, interview Q&A and a real-world scenario. The shared implementation is in [QA_Platform](QA_Platform/README.md): reusable validators, valid/invalid data fixtures, automated tests, ML/LLM/RAG/agent evaluation sets, security/performance plans, defect examples, reports, CI/CD gate, strategy, runbook and release-decision rule.
+
+Use the [curriculum coverage matrix](CURRICULUM_COVERAGE_MATRIX.md) as the definition of completion for every topic.
 
 ---
 
 ## 🚀 Getting Started
 
-### **Start in 10 minutes**
-
 ```powershell
 cd D:\STUDY\GitHubProjects\tkk---TechLearn\04-tkk---QA_DWH_ETL_AI_Agentic
-Get-Content 00_Start_Here\README.md
-python -m unittest discover -s shared/automation/tests -v
+
+# Start at Handbook 01, then progress in numeric order.
+Get-Content 01_QA_Testing_Foundations_Handbook\01_QA_Foundations_and_Test_Strategy.md
+
+# Run the dependency-free QA automation example after Python is installed.
+python 03_Python_Test_Automation_Handbook\02_Reusable_Validator_Example.py
+
+# Run the enterprise QA-platform validation suite
+python -m unittest discover -s QA_Platform/tests -v
 ```
 
-### **Reusable QA assets**
+### Daily routine
 
-- [Test strategy template](shared/templates/test_strategy_template.md)
-- [Test case template](shared/templates/test_case_template.md)
-- [Defect template](shared/templates/defect_template.md)
-- [Quality gate template](shared/templates/quality_gate_template.md)
-- [Sample test data](shared/test_data)
-- [Reconciliation automation](shared/automation/src/reconciliation.py)
-- [CI quality-gate workflow](.github/workflows/quality-gate.yml)
+- **60–90 min:** Study a handbook and translate concepts into test scenarios.
+- **30 min:** Complete its practice exercise with positive, negative and boundary cases.
+- **15 min:** Explain SUT, risk, oracle, evidence, gate and monitoring as an interview answer.
 
-### **Daily routine**
+### Senior QA checklist
 
-- **60–90 minutes:** Study one module and convert risks into scenarios/cases.
-- **30 minutes:** Create or automate one validation with positive, negative and boundary data.
-- **15 minutes:** Explain the SUT, risks, oracles, evidence, gate and monitoring aloud.
-
----
-
-## 📌 Senior QA / Test Architect Checklist
-
-### **Before a design or interview discussion**
-
-- ☐ Define the SUT boundary, critical data flows, dependencies and owners.
-- ☐ Identify customer, financial, regulatory, safety and security risks.
-- ☐ State positive, negative, boundary, failure/recovery and production coverage.
-- ☐ Name the test oracle, evidence and pass/fail threshold for critical checks.
-- ☐ Cover reconciliation, observability, quality gates and rollback.
-- ☐ For AI, explain golden datasets, human evaluation, safety/privacy and regression control.
-
-### **During the discussion**
-
-- ☐ Ask about scale, latency, volume, data sensitivity, SLOs and failure cost.
-- ☐ Prioritize coverage using impact × likelihood, not a generic test list.
-- ☐ Separate deterministic validation from probabilistic/rubric-based evaluation.
-- ☐ Make dependencies, assumptions, owners and residual risk visible.
-- ☐ Finish with a defensible PASS / FAIL / BLOCK decision process.
-
-### **After release or incident**
-
-- ☐ Verify actual production data and behavior—not only deployment status.
-- ☐ Preserve trace IDs, versions, samples, metrics and test evidence.
-- ☐ Trace the defect across source, transformations, interfaces and consumer output.
-- ☐ Add targeted regression, monitoring and preventive controls after root cause.
-
----
-
-## 💡 Quality Leadership Principles
-
-1. **A test run is not quality evidence unless its oracle and input data are trustworthy.**
-2. **Equal row counts do not prove equal business outcomes.** Reconcile keys, attributes and aggregates.
-3. **Automate stable, high-value checks; investigate ambiguity deliberately.**
-4. **For AI systems, evaluate behavior, safety and process—not only the final answer.**
-5. **A quality gate is a decision mechanism, not a dashboard decoration.**
-6. **Production observability is part of the test strategy, not a handoff after testing.**
-7. **Senior QA leadership turns risk into a clear, evidence-backed release decision.**
+- ☐ Define the SUT boundary, flow, owners, data sensitivity, SLOs and critical outcomes.
+- ☐ Prioritize risk rather than listing generic test types.
+- ☐ State the oracle and evidence for each release-critical test.
+- ☐ Cover reconciliation, security, performance, failure/recovery and observability.
+- ☐ Separate deterministic validation from rubric-based AI evaluation.
+- ☐ End every design with a PASS / FAIL / BLOCK rule and rollback/monitoring plan.
 
 <p align="center">
-  <b>Test with evidence. Release with confidence. Lead with quality. 🧪</b><br/>
-  <i>The outcome is a stronger Senior / Lead / Architect-level Data + AI QA professional.</i>
+  <b>Test with evidence. Release with confidence. Lead with quality. 🧪</b>
 </p>

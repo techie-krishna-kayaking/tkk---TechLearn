@@ -3,5 +3,7 @@ __pycache__/
 .venv/
 venv/
 .pytest_cache/
-shared/automation/reports/*
-!shared/automation/reports/.gitkeep
+reports/
+artifacts/
+*.log
+.env
