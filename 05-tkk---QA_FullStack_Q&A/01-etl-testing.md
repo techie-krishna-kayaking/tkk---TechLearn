@@ -12,68 +12,68 @@
 - Has owned production data quality incidents end-to-end
 - Understands the difference between "pipeline succeeded" and "data is correct"
 
-+ **Senior Engineer:** Can write test cases, execute reconciliation, debug failures
-+ **Lead:** Can design framework, standardize approach across teams, mentor
-+ **Test Architect:** Designs overall test architecture, chooses automation tools, defines quality gates for all pipelines
-+ **Staff/Principal:** Influences data strategy across org, defines data quality policy, architects observability
+1. **Senior Engineer:** Can write test cases, execute reconciliation, debug failures
+2. **Lead:** Can design framework, standardize approach across teams, mentor
+3. **Test Architect:** Designs overall test architecture, chooses automation tools, defines quality gates for all pipelines
+4. **Staff/Principal:** Influences data strategy across org, defines data quality policy, architects observability
 
 ## 2. Technology Overview
 
 ETL (Extract, Transform, Load) and ELT (Extract, Load, Transform) are patterns for moving data between systems. From a testing perspective:
 
-**What it is:** A pipeline that moves data from source systems to target systems (DWH, lake, analytics)
-**How it works:** Data is extracted from sources (APIs, files, DBs), transformed (business rules, joins, aggregations), loaded into targets
-**Where it used:** Data warehousing, analytics, reporting, ML feature pipelines
-**How it fails:** Silent data corruption, missing records, transformation logic bugs, duplicate loads, schema drift, late data
-**How it should be tested:** Source-to-target reconciliation, business rule validation, completeness checks, idempotency tests, performance tests
-**How it should be automated:** Python/PySpark test frameworks, SQL validation queries, CI/CD integration, data quality gates
+- **What it is:** A pipeline that moves data from source systems to target systems (DWH, lake, analytics)
+- **How it works:** Data is extracted from sources (APIs, files, DBs), transformed (business rules, joins, aggregations), loaded into targets
+- **Where it used:** Data warehousing, analytics, reporting, ML feature pipelines
+- **How it fails:** Silent data corruption, missing records, transformation logic bugs, duplicate loads, schema drift, late data
+- **How it should be tested:** Source-to-target reconciliation, business rule validation, completeness checks, idempotency tests, performance tests
+- **How it should be automated:** Python/PySpark test frameworks, SQL validation queries, CI/CD integration, data quality gates
 
 ## 3. Core Concepts
 
 ### ETL vs ELT
 
-**What:** ETL transforms before loading; ELT loads raw data first, transforms in target
-**Why:** ELT leverages target compute (Snowflake, BigQuery); ETL controls data before entry
-**How:** ETL uses staging layer; ELT uses raw + transformed layers
-**Testing:** ETL — test transformed output; ELT — test raw ingestion + transformation separately
-**Failure Modes:** ETL — transform failure; ELT — raw data corruption propagates
-**Production:** ELT requires stricter raw data governance; ETL may lose source fidelity
+- **What:** ETL transforms before loading; ELT loads raw data first, transforms in target
+- **Why:** ELT leverages target compute (Snowflake, BigQuery); ETL controls data before entry
+- **How:** ETL uses staging layer; ELT uses raw + transformed layers
+- **Testing:** ETL — test transformed output; ELT — test raw ingestion + transformation separately
+- **Failure Modes:** ETL — transform failure; ELT — raw data corruption propagates
+- **Production:** ELT requires stricter raw data governance; ETL may lose source fidelity
 
 ### Source-to-Target Validation
 
-**What:** Comparing source data against target after ETL
-**Why:** Ensures no data loss, corruption, or logic errors
-**How:** Record counts, checksums, hash validation, aggregate comparison, row-level comparison
-**Testing:** Design validation queries for each mapping spec
-**Failure Modes:** Network failures, partial loads, schema changes, encoding issues
-**Production:** Automate daily reconciliation; alert on variance > threshold
+- **What:** Comparing source data against target after ETL
+- **Why:** Ensures no data loss, corruption, or logic errors
+- **How:** Record counts, checksums, hash validation, aggregate comparison, row-level comparison
+- **Testing:** Design validation queries for each mapping spec
+- **Failure Modes:** Network failures, partial loads, schema changes, encoding issues
+- **Production:** Automate daily reconciliation; alert on variance > threshold
 
 ### CDC (Change Data Capture)
 
-**What:** Capturing only changed data since last load
-**Why:** Reduces volume, enables near-real-time pipelines
-**How:** Log-based (Debezium), query-based, trigger-based
-**Testing:** Verify all changes captured, no duplicates, correct watermark
-**Failure Modes:** Missed changes, duplicate CDC entries, watermark reset
-**Production:** Monitor CDC lag; test with snapshot + CDC combined loads
+- **What:** Capturing only changed data since last load
+- **Why:** Reduces volume, enables near-real-time pipelines
+- **How:** Log-based (Debezium), query-based, trigger-based
+- **Testing:** Verify all changes captured, no duplicates, correct watermark
+- **Failure Modes:** Missed changes, duplicate CDC entries, watermark reset
+- **Production:** Monitor CDC lag; test with snapshot + CDC combined loads
 
 ### Idempotency
 
-**What:** Running pipeline multiple times produces same result
-**Why:** Essential for restartability, retries, backfills
-**How:** Upsert logic, deduplication, deterministic transformations
-**Testing:** Run pipeline twice, compare source and target
-**Failure Modes:** Non-idempotent transformations, auto-increment IDs, timestamps
-**Production:** Critical for large-scale data recovery
+- **What:** Running pipeline multiple times produces same result
+- **Why:** Essential for restartability, retries, backfills
+- **How:** Upsert logic, deduplication, deterministic transformations
+- **Testing:** Run pipeline twice, compare source and target
+- **Failure Modes:** Non-idempotent transformations, auto-increment IDs, timestamps
+- **Production:** Critical for large-scale data recovery
 
 ### SCD (Slowly Changing Dimensions)
 
-**What:** Handling historical changes in dimension tables
-**Why:** Business needs historical accuracy
-**How:** SCD1 (overwrite), SCD2 (add row), SCD3 (add column), SCD4/6 variants
-**Testing:** Verify historical records preserved, current flags correct, effective dates valid
-**Failure Modes:** Missing history, duplicate current records, incorrect effective dating
-**Production:** SCD2 most common; test with overlapping effective dates
+- **What:** Handling historical changes in dimension tables
+- **Why:** Business needs historical accuracy
+- **How:** SCD1 (overwrite), SCD2 (add row), SCD3 (add column), SCD4/6 variants
+- **Testing:** Verify historical records preserved, current flags correct, effective dates valid
+- **Failure Modes:** Missing history, duplicate current records, incorrect effective dating
+- **Production:** SCD2 most common; test with overlapping effective dates
 
 ## 4. ARCHITECTURE
 
