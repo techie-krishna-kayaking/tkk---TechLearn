@@ -46,145 +46,145 @@ SQL-based validation frameworks, metadata-driven test generation, data lineage i
 
 ### Star Schema
 
-**What:** Fact table surrounded by dimension tables, minimizing joins.
-**Why:** Query performance, simplicity, clear grain definition.
-**How:** One-to-many relationship from dimensions to fact; no snowflakes.
-**Testing:** Validate cardinality, fact grain consistency, foreign key constraints.
-**Failure Modes:** Fact grain ambiguity, missing dimensions, snowflake complexity.
-**Production:** Monitor for snowflake creep; enforce star schema standards.
+- **What:** Fact table surrounded by dimension tables, minimizing joins.
+- **Why:** Query performance, simplicity, clear grain definition.
+- **How:** One-to-many relationship from dimensions to fact; no snowflakes.
+- **Testing:** Validate cardinality, fact grain consistency, foreign key constraints.
+- **Failure Modes:** Fact grain ambiguity, missing dimensions, snowflake complexity.
+- **Production:** Monitor for snowflake creep; enforce star schema standards.
 
 ### Snowflake Schema
 
-**What:** Normalized dimensions with multiple tables.
-**Why:** Dimension storage optimization, reduced redundancy.
-**How:** Dimension tables related through foreign keys.
-**Testing:** Complex join validation, referential integrity across snowflake.
-**Failure Modes:** Query complexity, performance degradation, join validation.
-**Production:** Use sparingly; prefer star for query performance.
+- **What:** Normalized dimensions with multiple tables.
+- **Why:** Dimension storage optimization, reduced redundancy.
+- **How:** Dimension tables related through foreign keys.
+- **Testing:** Complex join validation, referential integrity across snowflake.
+- **Failure Modes:** Query complexity, performance degradation, join validation.
+- **Production:** Use sparingly; prefer star for query performance.
 
 ### Grain
 
-**What:** Lowest level of detail in a fact table.
-**Why:** Defines fact table purpose, enables correct aggregation.
-**How:** Clearly specify "an order line", "an order", "daily sales" in spec.
-**Testing:** Verify grain matches requirement; test aggregations at grain level.
-**Failure Modes:** Ambiguous grain leads to wrong aggregations.
-**Production:** Document grain explicitly; auto-validate grain in tests.
+- **What:** Lowest level of detail in a fact table.
+- **Why:** Defines fact table purpose, enables correct aggregation.
+- **How:** Clearly specify "an order line", "an order", "daily sales" in spec.
+- **Testing:** Verify grain matches requirement; test aggregations at grain level.
+- **Failure Modes:** Ambiguous grain leads to wrong aggregations.
+- **Production:** Document grain explicitly; auto-validate grain in tests.
 
 ### Metrics Type
 
-**What:** Additive, semi-additive, non-additive measures.
-**Why:** Determines valid aggregation levels.
-**How:** Additive → all dimensions, Semi-additive (time only) → exclude time, Non-additive → no aggregation.
-**Testing:** Validate aggregations at each granularity.
-**Failure Modes:** Adding non-additive measures, improper time aggregation.
-**Production:** Tag measures with aggregation rules; validate in ETL.
+- **What:** Additive, semi-additive, non-additive measures.
+- **Why:** Determines valid aggregation levels.
+- **How:** Additive → all dimensions, Semi-additive (time only) → exclude time, Non-additive → no aggregation.
+- **Testing:** Validate aggregations at each granularity.
+- **Failure Modes:** Adding non-additive measures, improper time aggregation.
+- **Production:** Tag measures with aggregation rules; validate in ETL.
 
 ### SCD Types
 
 #### SCD0
-**What:** Static dimension, never changes.
-**Why:** Rare; use constant dimension.
-**How:** Load once, no updates.
-**Testing:** Verify no updates occur.
-**Failure Modes:** Changes in source break SCD0.
-**Production:** Avoid; use SCD2 for audit trail.
+- **What:** Static dimension, never changes.
+- **Why:** Rare; use constant dimension.
+- **How:** Load once, no updates.
+- **Testing:** Verify no updates occur.
+- **Failure Modes:** Changes in source break SCD0.
+- **Production:** Avoid; use SCD2 for audit trail.
 
 #### SCD1
-**What:** Overwrite previous values.
-**Why:** Keep latest version; no history needed.
-**How:** UPDATE dimension record on change.
-**Testing:** Verify only latest value stored.
-**Failure Modes:** Historical analysis impossible.
-**Production:** Use for non-historical attributes.
+- **What:** Overwrite previous values.
+- **Why:** Keep latest version; no history needed.
+- **How:** UPDATE dimension record on change.
+- **Testing:** Verify only latest value stored.
+- **Failure Modes:** Historical analysis impossible.
+- **Production:** Use for non-historical attributes.
 
 #### SCD2
-**What:** Add new row with new surrogate key.
-**Why:** Full history, audit trail, point-in-time analysis.
-**How:** New row with effective dates, current flag, surrogate key.
-**Testing:** Verify effective dates non-overlapping, current flag correct.
-**Failure Modes:** Overlapping dates, multiple current records.
-**Production:** Most common; requires careful date handling.
+- **What:** Add new row with new surrogate key.
+- **Why:** Full history, audit trail, point-in-time analysis.
+- **How:** New row with effective dates, current flag, surrogate key.
+- **Testing:** Verify effective dates non-overlapping, current flag correct.
+- **Failure Modes:** Overlapping dates, multiple current records.
+- **Production:** Most common; requires careful date handling.
 
 #### SCD3
-**What:** Add columns for limited history.
-**Why:** Track only specific changes without full row duplication.
-**How:** Previous_value_1, current_value_1, etc.
-**Testing:** Verify previous columns populated correctly.
-**Failure Modes:** Limited history scope; column explosion.
-**Production:** Rare; use only when only need 1-2 historical versions.
+- **What:** Add columns for limited history.
+- **Why:** Track only specific changes without full row duplication.
+- **How:** Previous_value_1, current_value_1, etc.
+- **Testing:** Verify previous columns populated correctly.
+- **Failure Modes:** Limited history scope; column explosion.
+- **Production:** Rare; use only when only need 1-2 historical versions.
 
 #### SCD4/SCD6
-**What:** Hybrid of SCD1/SCD2; historical table + current table.
-**Why:** Balance storage and history.
-**How:** Current table + history table with SNOWFLAKE_ID.
-**Testing:** Verify sync between current and history.
-**Failure Modes:** Sync issues between tables.
-**Production:** Complex; use SCD2 instead unless justified.
+- **What:** Hybrid of SCD1/SCD2; historical table + current table.
+- **Why:** Balance storage and history.
+- **How:** Current table + history table with SNOWFLAKE_ID.
+- **Testing:** Verify sync between current and history.
+- **Failure Modes:** Sync issues between tables.
+- **Production:** Complex; use SCD2 instead unless justified.
 
 ### Surrogate Key vs Natural Key
 
-**What:** Surrogate (system-generated), Natural (business key).
-**Why:** Surrogate ensures uniqueness; Natural business-meaning.
-**How:** Surrogate = PK for joins; Natural used for business logic.
-**Testing:** Verify surrogate uniqueness; natural key consistency.
-**Failure Modes:** Invalid natural keys in source.
-**Production:** Always use surrogate for joins.
+- **What:** Surrogate (system-generated), Natural (business key).
+- **Why:** Surrogate ensures uniqueness; Natural business-meaning.
+- **How:** Surrogate = PK for joins; Natural used for business logic.
+- **Testing:** Verify surrogate uniqueness; natural key consistency.
+- **Failure Modes:** Invalid natural keys in source.
+- **Production:** Always use surrogate for joins.
 
 ### Conformed Dimensions
 
-**What:** Same dimension appears in multiple fact tables.
-**Why:** Enables consistent reporting across facts.
-**How:** Same dimension key definition, same attribute values.
-**Testing:** Cross-fact dimension consistency, shared key validation.
-**Failure Modes:** Dimension drift, different definitions.
-**Production:** Enforce via data contracts; automated conformance testing.
+- **What:** Same dimension appears in multiple fact tables.
+- **Why:** Enables consistent reporting across facts.
+- **How:** Same dimension key definition, same attribute values.
+- **Testing:** Cross-fact dimension consistency, shared key validation.
+- **Failure Modes:** Dimension drift, different definitions.
+- **Production:** Enforce via data contracts; automated conformance testing.
 
 ### Fact Types
 
 #### Transactional Fact
-**What:** Records each business event.
-**Why:** Detailed analysis, drill-down capability.
-**How:** One row per transaction (sale, order line).
-**Testing:** Count matches transactions; measures sum correctly.
-**Failure Modes:** Missing transaction records.
-**Production:** High volume; require partitioning.
+- **What:** Records each business event.
+- **Why:** Detailed analysis, drill-down capability.
+- **How:** One row per transaction (sale, order line).
+- **Testing:** Count matches transactions; measures sum correctly.
+- **Failure Modes:** Missing transaction records.
+- **Production:** High volume; require partitioning.
 
 #### Snapshot Fact
-**What:** Captures state at specific time.
-**Why:** Historical state, trend analysis.
-**How:** Periodic row capture (daily balance).
-**Testing:** Correct timestamp; state matches source.
-**Failure Modes:** Missing snapshots; incorrect state.
-**Production:** Schedule critical; monitor gaps.
+- **What:** Captures state at specific time.
+- **Why:** Historical state, trend analysis.
+- **How:** Periodic row capture (daily balance).
+- **Testing:** Correct timestamp; state matches source.
+- **Failure Modes:** Missing snapshots; incorrect state.
+- **Production:** Schedule critical; monitor gaps.
 
 #### Accumulating Snapshot
-**What:** Tracks multi-stage process.
-**Why:** Process cycle time, stage duration analysis.
-**Testing:** All stage timestamps populated; duration calculations.
-**Failure Modes:** Missing stage; incorrect order.
-**Production:** Critical for SLA monitoring.
+- **What:** Tracks multi-stage process.
+- **Why:** Process cycle time, stage duration analysis.
+- **Testing:** All stage timestamps populated; duration calculations.
+- **Failure Modes:** Missing stage; incorrect order.
+- **Production:** Critical for SLA monitoring.
 
 ### Additive Measures
 
-**What:** Can be summed across any dimension.
-**Why:** Quantity, revenue, cost.
-**Testing:** SUM over any dimension equals total.
-**Production:** Tag as additive; validate aggregation.
+- **What:** Can be summed across any dimension.
+- **Why:** Quantity, revenue, cost.
+- **Testing:** SUM over any dimension equals total.
+- **Production:** Tag as additive; validate aggregation.
 
 ### Semi-additive Measures
 
-**What:** Summable over some dimensions only.
-**Why:** Balance, inventory (not over time).
-**Testing:** Validate correct aggregation rules.
-**Production:** Time-based summarization excludes time dimension.
+- **What:** Summable over some dimensions only.
+- **Why:** Balance, inventory (not over time).
+- **Testing:** Validate correct aggregation rules.
+- **Production:** Time-based summarization excludes time dimension.
 
 ### Non-additive Measures
 
-**What:** Cannot be summed.
-**Why:** Ratio, price, count of distinct.
-**Testing:** Validate correct calculation.
-**Production:** Use appropriate aggregation (AVG, MAX, COUNT DISTINCT).
+- **What:** Cannot be summed.
+- **Why:** Ratio, price, count of distinct.
+- **Testing:** Validate correct calculation.
+- **Production:** Use appropriate aggregation (AVG, MAX, COUNT DISTINCT).
 
 ## 4. ARCHITECTURE
 
