@@ -55,75 +55,75 @@ Power BI, Tableau, Qlik, Looker, Excel, custom reports.
 
 ### Semantic Models
 
-**What:** Business logic layer between DWH and BI tool.
-**Why:** Simplifies complex logic for business users.
-**How:** Measures, dimensions, calculated columns defined in semantic model.
-**Testing:** Validate semantic model matches DWH logic.
-**Failure Modes:** Semantic drift, calculation errors.
-**Production:** Monitor semantic model changes.
+- **What:** Business logic layer between DWH and BI tool.
+- **Why:** Simplifies complex logic for business users.
+- **How:** Measures, dimensions, calculated columns defined in semantic model.
+- **Testing:** Validate semantic model matches DWH logic.
+- **Failure Modes:** Semantic drift, calculation errors.
+- **Production:** Monitor semantic model changes.
 
 ### DAX (Data Analysis Expressions)
 
-**What:** Formula language for Power BI, Analysis Services, Power Pivot.
-**Why:** Business logic in semantic model.
-**How:** CALCULATE, FILTER, ALL, context transitions.
-**Testing:** Validate DAX outputs match SQL equivalents.
-**Failure Modes:** Context transition bugs, filter context errors.
-**Production:** DAX unit tests.
+- **What:** Formula language for Power BI, Analysis Services, Power Pivot.
+- **Why:** Business logic in semantic model.
+- **How:** CALCULATE, FILTER, ALL, context transitions.
+- **Testing:** Validate DAX outputs match SQL equivalents.
+- **Failure Modes:** Context transition bugs, filter context errors.
+- **Production:** DAX unit tests.
 
 ### Power Query / Tableau Prep
 
-**What:** Data transformation in BI tool before loading to model.
-**Why:** Lightweight transformations at report level.
-**How:** M language (Power Query), Tableau prep flows.
-**Testing:** Validate transformations, test with edge cases.
-**Failure Modes:** Data type changes, missing rows, logic errors.
-**Production:** Version control for M scripts.
+- **What:** Data transformation in BI tool before loading to model.
+- **Why:** Lightweight transformations at report level.
+- **How:** M language (Power Query), Tableau prep flows.
+- **Testing:** Validate transformations, test with edge cases.
+- **Failure Modes:** Data type changes, missing rows, logic errors.
+- **Production:** Version control for M scripts.
 
 ### Row-Level Security (RLS)
 
-**What:** Row filtering based on user identity.
-**Why:** Data access control, compliance.
-**How:** DAX filters, Tableau user filters.
-**Testing:** Test all user roles, edge cases, inheritance.
-**Failure Modes:** Over-permission, under-permission, role conflicts.
-**Production:** Validate RLS per user.
+- **What:** Row filtering based on user identity.
+- **Why:** Data access control, compliance.
+- **How:** DAX filters, Tableau user filters.
+- **Testing:** Test all user roles, edge cases, inheritance.
+- **Failure Modes:** Over-permission, under-permission, role conflicts.
+- **Production:** Validate RLS per user.
 
 ### Dashboard Performance
 
-**What:** Query speed, render time, memory usage.
-**Why:** User experience, scalability.
-**How:** Query diagnostics, rendering metrics.
-**Testing:** Load testing, concurrent user testing.
-**Failure Modes:** Slow queries, memory exhaustion, timeout.
-**Production:** Performance monitoring, optimization.
+- **What:** Query speed, render time, memory usage.
+- **Why:** User experience, scalability.
+- **How:** Query diagnostics, rendering metrics.
+- **Testing:** Load testing, concurrent user testing.
+- **Failure Modes:** Slow queries, memory exhaustion, timeout.
+- **Production:** Performance monitoring, optimization.
 
 ### Extracts vs DirectQuery
 
-**What:** Extracts cache data locally; DirectQuery queries source live.
-**Why:** Performance vs freshness trade-off.
-**How:** Extract refresh schedule; DirectQuery live connection.
-**Testing:** Test refresh correctness, staleness, data consistency.
-**Failure Modes:** Stale extract, DirectQuery performance.
-**Production:** Monitor refresh status, query performance.
+- **What:** Extracts cache data locally; DirectQuery queries source live.
+- **Why:** Performance vs freshness trade-off.
+- **How:** Extract refresh schedule; DirectQuery live connection.
+- **Testing:** Test refresh correctness, staleness, data consistency.
+- **Failure Modes:** Stale extract, DirectQuery performance.
+- **Production:** Monitor refresh status, query performance.
 
 ### Calculated Fields / Measures
 
-**What:** Business calculations defined in BI tool.
-**Why:** Business-specific metrics not in DWH.
-**How:** DAX formulas, Tableau calculated fields.
-**Testing:** Validate calculation logic against DWH.
-**Failure Modes:** Logic errors, context issues.
-**Production:** Version control, peer review.
+- **What:** Business calculations defined in BI tool.
+- **Why:** Business-specific metrics not in DWH.
+- **How:** DAX formulas, Tableau calculated fields.
+- **Testing:** Validate calculation logic against DWH.
+- **Failure Modes:** Logic errors, context issues.
+- **Production:** Version control, peer review.
 
 ### Drill-Down / Drill-Through
 
-**What:** Navigate from summary to detail.
-**Why:** Root cause analysis, detailed investigation.
-**How:** Hierarchies, detail pages.
-**Testing:** Validate drill accuracy, data consistency.
-**Failure Modes:** Wrong level, missing data, slow performance.
-**Production:** Test drill paths with real data.
+- **What:** Navigate from summary to detail.
+- **Why:** Root cause analysis, detailed investigation.
+- **How:** Hierarchies, detail pages.
+- **Testing:** Validate drill accuracy, data consistency.
+- **Failure Modes:** Wrong level, missing data, slow performance.
+- **Production:** Test drill paths with real data.
 
 ## 4. ARCHITECTURE
 

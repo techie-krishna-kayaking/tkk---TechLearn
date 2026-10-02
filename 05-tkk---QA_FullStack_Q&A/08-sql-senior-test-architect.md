@@ -12,10 +12,10 @@
 - Can write efficient reconciliation queries for large datasets
 - Understands transaction isolation, locking, concurrency
 
-**Senior Engineer:** Writes complex SQL for testing
-**Lead:** Designs SQL validation framework, sets SQL standards
-**Test Architect:** Architects SQL testing strategy for enterprise data platforms
-**Staff/Principal:** Influences SQL governance and data quality standards
+1. **Senior Engineer:** Writes complex SQL for testing
+2. **Lead:** Designs SQL validation framework, sets SQL standards
+3. **Test Architect:** Architects SQL testing strategy for enterprise data platforms
+4. **Staff/Principal:** Influences SQL governance and data quality standards
 
 ## 2. Technology Overview
 
@@ -52,84 +52,84 @@ ETL validation, DWH testing, data reconciliation, quality checks, BI semantic mo
 ## 3. Core Concepts
 
 ### CTE (Common Table Expressions)
-**What:** Named subqueries defined with WITH clause.
-**Why:** Readability, recursion, modular queries.
-**How:** WITH name AS (query) SELECT ...
-**Testing:** Validate CTE logic independently.
-**Failure Modes:** Recursive CTE infinite loops, incorrect base cases.
-**Production:** Use for complex multi-step transformations.
+- **What:** Named subqueries defined with WITH clause.
+- **Why:** Readability, recursion, modular queries.
+- **How:** WITH name AS (query) SELECT ...
+- **Testing:** Validate CTE logic independently.
+- **Failure Modes:** Recursive CTE infinite loops, incorrect base cases.
+- **Production:** Use for complex multi-step transformations.
 
 ### Window Functions
-**What:** Functions operating over window of rows.
-**Why:** Ranking, running totals, comparisons.
-**How:** ROW_NUMBER, RANK, DENSE_RANK, LEAD, LAG, SUM OVER, AVG OVER.
-**Testing:** Validate window frame, partitioning, ordering.
-**Failure Modes:** Incorrect frame specification, NULL handling.
-**Production:** Test with large datasets for performance.
+- **What:** Functions operating over window of rows.
+- **Why:** Ranking, running totals, comparisons.
+- **How:** ROW_NUMBER, RANK, DENSE_RANK, LEAD, LAG, SUM OVER, AVG OVER.
+- **Testing:** Validate window frame, partitioning, ordering.
+- **Failure Modes:** Incorrect frame specification, NULL handling.
+- **Production:** Test with large datasets for performance.
 
 ### Recursive CTE
-**What:** CTE that references itself.
-**Why:** Hierarchical data, graph traversal.
-**How:** Base case + recursive case with UNION ALL.
-**Testing:** Validate recursion termination, cycle detection.
-**Failure Modes:** Infinite recursion, incorrect base case.
-**Production:** Set MAXRECURSION limit.
+- **What:** CTE that references itself.
+- **Why:** Hierarchical data, graph traversal.
+- **How:** Base case + recursive case with UNION ALL.
+- **Testing:** Validate recursion termination, cycle detection.
+- **Failure Modes:** Infinite recursion, incorrect base case.
+- **Production:** Set MAXRECURSION limit.
 
 ### Gaps and Islands
-**What:** Identifying missing/continuous sequences.
-**Why:** Data completeness analysis, anomaly detection.
-**How:** LAG/LEAD to detect gaps; ROW_NUMBER grouping for islands.
-**Testing:** Validate gap detection logic.
-**Failure Modes:** Incorrect grouping, off-by-one errors.
-**Production:** Use for monitoring data completeness.
+- **What:** Identifying missing/continuous sequences.
+- **Why:** Data completeness analysis, anomaly detection.
+- **How:** LAG/LEAD to detect gaps; ROW_NUMBER grouping for islands.
+- **Testing:** Validate gap detection logic.
+- **Failure Modes:** Incorrect grouping, off-by-one errors.
+- **Production:** Use for monitoring data completeness.
 
 ### Deduplication
-**What:** Removing duplicate records.
-**Why:** Data quality, accurate analytics.
-**How:** ROW_NUMBER with partitioning, DISTINCT, GROUP BY.
-**Testing:** Verify no data loss, correct dedup logic.
-**Failure Modes:** Losing valid records, incorrect priority.
-**Production:** Handle ties with deterministic logic.
+- **What:** Removing duplicate records.
+- **Why:** Data quality, accurate analytics.
+- **How:** ROW_NUMBER with partitioning, DISTINCT, GROUP BY.
+- **Testing:** Verify no data loss, correct dedup logic.
+- **Failure Modes:** Losing valid records, incorrect priority.
+- **Production:** Handle ties with deterministic logic.
 
 ### SCD2 (Slowly Changing Dimension Type 2)
-**What:** Full history tracking with surrogate keys.
-**Why:** Point-in-time analysis, audit trail.
-**How:** New row on change, effective dates, current flag.
-**Testing:** Validate date ranges, current flag, no overlaps.
-**Failure Modes:** Overlapping dates, multiple current records.
-**Production:** MERGE with date validation.
+- **What:** Full history tracking with surrogate keys.
+- **Why:** Point-in-time analysis, audit trail.
+- **How:** New row on change, effective dates, current flag.
+- **Testing:** Validate date ranges, current flag, no overlaps.
+- **Failure Modes:** Overlapping dates, multiple current records.
+- **Production:** MERGE with date validation.
 
 ### MERGE Statement
-**What:** Upsert (insert/update/delete) in one statement.
-**Why:** Efficient SCD2, reconciliation.
-**How:** MATCHED THEN UPDATE/INSERT/DELETE.
-**Testing:** Validate all branches, handle duplicates.
-**Failure Modes:** Multiple matches, incorrect conditions.
-**Production:** Use for SCD2 and reconciliation.
+- **What:** Upsert (insert/update/delete) in one statement.
+- **Why:** Efficient SCD2, reconciliation.
+- **How:** MATCHED THEN UPDATE/INSERT/DELETE.
+- **Testing:** Validate all branches, handle duplicates.
+- **Failure Modes:** Multiple matches, incorrect conditions.
+- **Production:** Use for SCD2 and reconciliation.
 
 ### Transaction Isolation Levels
-**What:** READ UNCOMMITTED, READ COMMITTED, REPEATABLE READ, SERIALIZABLE.
-**Why:** Control concurrency behavior.
-**How:** SET TRANSACTION ISOLATION LEVEL.
-**Testing:** Test concurrent scenarios, validate isolation guarantees.
-**Failure Modes:** Dirty reads, phantom reads, lost updates.
-**Production:** Choose appropriate level for workload.
+- **What:** READ UNCOMMITTED, READ COMMITTED, REPEATABLE READ, SERIALIZABLE.
+- **Why:** Control concurrency behavior.
+- **How:** SET TRANSACTION ISOLATION LEVEL.
+- **Testing:** Test concurrent scenarios, validate isolation guarantees.
+- **Failure Modes:** Dirty reads, phantom reads, lost updates.
+- **Production:** Choose appropriate level for workload.
 
 ### Execution Plans
-**What:** Query execution strategy chosen by optimizer.
-**Why:** Performance optimization.
-**How:** EXPLAIN, SHOW PLAN, actual execution plan.
-**Testing:** Analyze plan for efficiency.
-**Failure Modes:** Suboptimal plans, missing indexes.
-**Production:** Monitor plan changes after schema modifications.
+- **What:** Query execution strategy chosen by optimizer.
+- **Why:** Performance optimization.
+- **How:** EXPLAIN, SHOW PLAN, actual execution plan.
+- **Testing:** Analyze plan for efficiency.
+- **Failure Modes:** Suboptimal plans, missing indexes.
+- **Production:** Monitor plan changes after schema modifications.
 
 ### Indexes
-**What:** Data structures for fast lookup.
-**Why:** Improve query performance.
-**How:** B-tree, hash, bitmap, covering indexes.
-**Testing:** Validate index usage, measure impact.
-**Failure Modes:** Over-indexing, unused indexes.
-**Production:** Monitor index usage and maintenance costs.
+- **What:** Data structures for fast lookup.
+- **Why:** Improve query performance.
+- **How:** B-tree, hash, bitmap, covering indexes.
+- **Testing:** Validate index usage, measure impact.
+- **Failure Modes:** Over-indexing, unused indexes.
+- **Production:** Monitor index usage and maintenance costs.
 
 ## 4. ARCHITECTURE
 

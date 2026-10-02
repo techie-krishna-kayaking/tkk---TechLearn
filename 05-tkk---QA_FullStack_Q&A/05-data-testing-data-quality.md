@@ -13,10 +13,10 @@
 - Has built Great Expectations/Deequ frameworks
 - Can handle data drift, schema drift, lineage issues
 
-**Senior Engineer:** Validates data quality rules
-**Lead:** Designs DQ framework, defines SLAs
-**Test Architect:** Architects data quality platform, defines governance
-**Staff/Principal:** Influences data strategy across org, defines data contracts
+1. **Senior Engineer:** Validates data quality rules
+2. **Lead:** Designs DQ framework, defines SLAs
+3. **Test Architect:** Architects data quality platform, defines governance
+4. **Staff/Principal:** Influences data strategy across org, defines data contracts
 
 ## 2. Technology Overview
 
@@ -55,155 +55,155 @@ Data pipelines, ETL/ELT processes, data lakes, warehouses, real-time streams, re
 
 ### Data Quality Dimensions
 
-**What:** Five (or more) core dimensions of data quality.
-**Why:** Provides systematic framework for assessing data quality.
-**How:** Completeness (no missing values), Accuracy (matches truth), Validity (conforms to schema), Uniqueness (no duplicates), Consistency (across systems).
-**Testing:** Each dimension tested with specific assertions.
-**Failure Modes:** Hidden data quality issues, silent failures.
-**Production:** Continuous monitoring for these dimensions.
+- **What:** Five (or more) core dimensions of data quality.
+- **Why:** Provides systematic framework for assessing data quality.
+- **How:** Completeness (no missing values), Accuracy (matches truth), Validity (conforms to schema), Uniqueness (no duplicates), Consistency (across systems).
+- **Testing:** Each dimension tested with specific assertions.
+- **Failure Modes:** Hidden data quality issues, silent failures.
+- **Production:** Continuous monitoring for these dimensions.
 
 #### Data Completeness
-**What:** Measure of how much data is present.
-**Why:** Missing data affects reliability.
-**How:** Count non-null values vs total records.
-**Testing:** Threshold-based alerts for missing data.
-**Failure Modes:** Undetected missing records.
-**Production:** Automated percentage monitoring.
+- **What:** Measure of how much data is present.
+- **Why:** Missing data affects reliability.
+- **How:** Count non-null values vs total records.
+- **Testing:** Threshold-based alerts for missing data.
+- **Failure Modes:** Undetected missing records.
+- **Production:** Automated percentage monitoring.
 
 #### Data Accuracy
-**What:** Match between data and reality/truth source.
-**Why:** Wrong data leads to wrong decisions.
-**How:** Compare with trusted source (master data, external system).
-**Testing:** Reconciliation against golden source.
-**Failure Modes:** Drift from source, transformation errors.
-**Production:** Automatic reconciliation with alerts.
+- **What:** Match between data and reality/truth source.
+- **Why:** Wrong data leads to wrong decisions.
+- **How:** Compare with trusted source (master data, external system).
+- **Testing:** Reconciliation against golden source.
+- **Failure Modes:** Drift from source, transformation errors.
+- **Production:** Automatic reconciliation with alerts.
 
 #### Data Validity
-**What:** Conformance to expected format/structure.
-**Why:** Invalid data breaks processing.
-**How:** Schema validation, format checks, range validation.
-**Testing:** Schema validation tests, format checks.
-**Failure Modes:** Wrong types, malformed data.
-**Production:** Schema enforcement in ingestion.
+- **What:** Conformance to expected format/structure.
+- **Why:** Invalid data breaks processing.
+- **How:** Schema validation, format checks, range validation.
+- **Testing:** Schema validation tests, format checks.
+- **Failure Modes:** Wrong types, malformed data.
+- **Production:** Schema enforcement in ingestion.
 
 #### Data Uniqueness
-**What:** Absence of duplicate records.
-**Why:** Duplicates skew analytics.
-**How:** Identify and remove duplicates based on business keys.
-**Testing:** Duplicate detection algorithms.
-**Failure Modes:** Duplicate processing, duplicate metrics.
-**Production:** Deduplication in pipeline.
+- **What:** Absence of duplicate records.
+- **Why:** Duplicates skew analytics.
+- **How:** Identify and remove duplicates based on business keys.
+- **Testing:** Duplicate detection algorithms.
+- **Failure Modes:** Duplicate processing, duplicate metrics.
+- **Production:** Deduplication in pipeline.
 
 #### Data Consistency
-**What:** Same data values across systems.
-**Why:** Inconsistent data causes confusion.
-**How:** Reconciliation between systems.
-**Testing:** Cross-system validation.
-**Failure Modes:** Inconsistent state, synchronization delays.
-**Production:** Consistent data governance.
+- **What:** Same data values across systems.
+- **Why:** Inconsistent data causes confusion.
+- **How:** Reconciliation between systems.
+- **Testing:** Cross-system validation.
+- **Failure Modes:** Inconsistent state, synchronization delays.
+- **Production:** Consistent data governance.
 
 #### Timeliness/Freshness
-**What:** How current the data is.
-**Why:** Stale data affects decisions.
-**How:** Measure time since last update.
-**Testing:** Latency measurement.
-**Failure Modes:** Late data, delayed updates.
-**Production:** SLA-based freshness monitoring.\n### Data Profiling
+- **What:** How current the data is.
+- **Why:** Stale data affects decisions.
+- **How:** Measure time since last update.
+- **Testing:** Latency measurement.
+- **Failure Modes:** Late data, delayed updates.
+- **Production:** SLA-based freshness monitoring.\n### Data Profiling
 
-**What:** Automated discovery of data characteristics.
-**Why:** Identifies quality issues early.
-**How:** Statistics, distributions, correlations.
-**Testing:** Profile accuracy, coverage.
-**Failure Modes:** Incomplete profiling.
-**Production:** Scheduled profiling runs.
+- **What:** Automated discovery of data characteristics.
+- **Why:** Identifies quality issues early.
+- **How:** Statistics, distributions, correlations.
+- **Testing:** Profile accuracy, coverage.
+- **Failure Modes:** Incomplete profiling.
+- **Production:** Scheduled profiling runs.
 
 #### Automated Profiling
-**What:** Automated data statistics generation.
-**Why:** Efficient data understanding.
-**How:** Row counts, column types, null rates, value distributions.
-**Testing:** Profile consistency across runs.
-**Failure Modes:** Biased sampling.
-**Production:** Continuous profiling.
+- **What:** Automated data statistics generation.
+- **Why:** Efficient data understanding.
+- **How:** Row counts, column types, null rates, value distributions.
+- **Testing:** Profile consistency across runs.
+- **Failure Modes:** Biased sampling.
+- **Production:** Continuous profiling.
 
 #### Data Quality Score
-**What:** Composite metric of data quality.
-**Why:** Single quality indicator.
-**How:** Weighted average of dimensions.
-**Testing:** Score accuracy.
-**Failure Modes:** Poor weight selection.
-**Production:** Dashboard for stakeholders.
+- **What:** Composite metric of data quality.
+- **Why:** Single quality indicator.
+- **How:** Weighted average of dimensions.
+- **Testing:** Score accuracy.
+- **Failure Modes:** Poor weight selection.
+- **Production:** Dashboard for stakeholders.
 
 ### Anomaly Detection
 
-**What:** Identification of unusual data patterns.
-**Why:** Early detection of problems.
-**How:** Statistical methods (z-score, IQR), machine learning.
-**Testing:** False positive/negative rates.
-**Failure Modes:** Missed anomalies, false alarms.
-**Production:** Automated anomaly alerts.
+- **What:** Identification of unusual data patterns.
+- **Why:** Early detection of problems.
+- **How:** Statistical methods (z-score, IQR), machine learning.
+- **Testing:** False positive/negative rates.
+- **Failure Modes:** Missed anomalies, false alarms.
+- **Production:** Automated anomaly alerts.
 
 ### Data Contracts
 
-**What:** Explicit agreement between data producers and consumers.
-**Why:** Defines expectations and responsibilities.
-**How:** JSON schema, documentation, SLA.
-**Testing:** Contract validation.
-**Failure Modes:** Contract drift.
-**Production:** Contract enforcement in CI/CD.
+- **What:** Explicit agreement between data producers and consumers.
+- **Why:** Defines expectations and responsibilities.
+- **How:** JSON schema, documentation, SLA.
+- **Testing:** Contract validation.
+- **Failure Modes:** Contract drift.
+- **Production:** Contract enforcement in CI/CD.
 
 ### Great Expectations
 
-**What:** Open-source data validation framework.
-**Why:** Declarative validation.
-**How:** Expectations defined in Python.
-**Testing:** Expectation correctness, performance.
-**Failure Modes:** Expectation bugs.
-**Production:** Integration in pipelines.
+- **What:** Open-source data validation framework.
+- **Why:** Declarative validation.
+- **How:** Expectations defined in Python.
+- **Testing:** Expectation correctness, performance.
+- **Failure Modes:** Expectation bugs.
+- **Production:** Integration in pipelines.
 
 ### Great Expectations Framework
 
-**What:** Structured validation of data.
-**Why:** Validates complex conditions.
-**How:** Expect_table, Expect_column_values_to_be_of_type, etc.
-**Testing:** Expectation implementation correctness.
-**Failure Modes:** Expectation chaining issues.
-**Production:** Automated test execution.
+- **What:** Structured validation of data.
+- **Why:** Validates complex conditions.
+- **How:** Expect_table, Expect_column_values_to_be_of_type, etc.
+- **Testing:** Expectation implementation correctness.
+- **Failure Modes:** Expectation chaining issues.
+- **Production:** Automated test execution.
 
 ### Deequ
 
-**What:** AWS open-source data quality library for Spark.
-**Why:** Spark-native validation.
-**How:** Static analysis, runtime checks.
-**Testing:** Check correctness.
-**Failure Modes:** Check bugs.
-**Production:** Spark integration.
+- **What:** AWS open-source data quality library for Spark.
+- **Why:** Spark-native validation.
+- **How:** Static analysis, runtime checks.
+- **Testing:** Check correctness.
+- **Failure Modes:** Check bugs.
+- **Production:** Spark integration.
 
 ### Data Observability
 
-**What:** Monitoring data pipeline health.
-**Why:** Proactive issue detection.
-**How:** Metrics, lineage, data flow monitoring.
-**Testing:** Monitoring accuracy.
-**Failure Modes:** Blind spots in monitoring.
-**Production:** Dashboards for stakeholders.
+- **What:** Monitoring data pipeline health.
+- **Why:** Proactive issue detection.
+- **How:** Metrics, lineage, data flow monitoring.
+- **Testing:** Monitoring accuracy.
+- **Failure Modes:** Blind spots in monitoring.
+- **Production:** Dashboards for stakeholders.
 
 ### Data Lineage
 
-**What:** Track data origin and transformations.
-**Why:** Root cause analysis.
-**How:** Metadata capture.
-**Testing:** Lineage accuracy.
-**Failure Modes:** Incomplete lineage.
-**Production:** Automated lineage extraction.
+- **What:** Track data origin and transformations.
+- **Why:** Root cause analysis.
+- **How:** Metadata capture.
+- **Testing:** Lineage accuracy.
+- **Failure Modes:** Incomplete lineage.
+- **Production:** Automated lineage extraction.
 
 ### Data Governance
 
-**What:** Organizational rules for data management.
-**Why:** Compliance and quality assurance.
-**How:** Policies, roles, standards.
-**Testing:** Policy compliance.
-**Failure Modes:** Policy violations.
-**Production:** Enforcement mechanisms.
+- **What:** Organizational rules for data management.
+- **Why:** Compliance and quality assurance.
+- **How:** Policies, roles, standards.
+- **Testing:** Policy compliance.
+- **Failure Modes:** Policy violations.
+- **Production:** Enforcement mechanisms.
 
 ## 4. ARCHITECTURE
 

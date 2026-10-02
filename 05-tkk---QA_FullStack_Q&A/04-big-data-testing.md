@@ -56,136 +56,136 @@ Data lakes, data warehouses, ETL/ELT pipelines, ML feature stores, real-time ana
 ### Hadoop Ecosystem
 
 #### HDFS (Hadoop Distributed File System)
-**What:** Distributed storage for big data.
-**Why:** Fault-tolerant, scalable storage.
-**How:** Data split into blocks, replicated across nodes.
-**Testing:** Block placement, replication factor, data locality.
-**Failure Modes:** Data loss, under-replicated blocks, namenode failure.
-**Production:** Monitor block health, balance data across nodes.
+- **What:** Distributed storage for big data.
+- **Why:** Fault-tolerant, scalable storage.
+- **How:** Data split into blocks, replicated across nodes.
+- **Testing:** Block placement, replication factor, data locality.
+- **Failure Modes:** Data loss, under-replicated blocks, namenode failure.
+- **Production:** Monitor block health, balance data across nodes.
 
 #### MapReduce
-**What:** Distributed processing paradigm.
-**Why:** Batch processing at scale.
-**How:** Map phase → Shuffle → Reduce phase.
-**Testing:** Map logic correctness, shuffle correctness, reduce logic.
-**Failure Modes:** Mapper/reducer failures, skew, combinator issues.
-**Production:** Monitor job counters, task failures.
+- **What:** Distributed processing paradigm.
+- **Why:** Batch processing at scale.
+- **How:** Map phase → Shuffle → Reduce phase.
+- **Testing:** Map logic correctness, shuffle correctness, reduce logic.
+- **Failure Modes:** Mapper/reducer failures, skew, combinator issues.
+- **Production:** Monitor job counters, task failures.
 
 #### Hive
-**What:** SQL-like interface for Hadoop.
-**Why:** Familiar SQL for big data querying.
-**How:** SQL converted to MapReduce/Tez/Spark jobs.
-**Testing:** Query correctness, partition pruning, join optimization.
-**Failure Modes:** Incorrect results, slow queries, UDF failures.
-**Production:** Monitor query performance, partition health.
+- **What:** SQL-like interface for Hadoop.
+- **Why:** Familiar SQL for big data querying.
+- **How:** SQL converted to MapReduce/Tez/Spark jobs.
+- **Testing:** Query correctness, partition pruning, join optimization.
+- **Failure Modes:** Incorrect results, slow queries, UDF failures.
+- **Production:** Monitor query performance, partition health.
 
 ### Spark Core Concepts
 
 #### RDD (Resilient Distributed Dataset)
-**What:** Fault-tolerant distributed collection.
-**Why:** Foundation of Spark API.
-**How:** Immutable, partitioned, lineage-based recovery.
-**Testing:** Transformation correctness, action results, partitioning.
-**Failure Modes:** Serialization errors, closure issues, memory leaks.
-**Production:** Monitor RDD lineage, persistence levels.
+- **What:** Fault-tolerant distributed collection.
+- **Why:** Foundation of Spark API.
+- **How:** Immutable, partitioned, lineage-based recovery.
+- **Testing:** Transformation correctness, action results, partitioning.
+- **Failure Modes:** Serialization errors, closure issues, memory leaks.
+- **Production:** Monitor RDD lineage, persistence levels.
 
 #### DataFrame & Dataset
-**What:** Structured API with schema optimization.
-**Why:** Better performance, optimization via Catalyst.
-**How:** Schema-aware, optimized physical plan.
-**Testing:** Schema validation, transformation correctness, action results.
-**Failure Modes:** Schema mismatch, optimization bugs, UDF issues.
-**Production:** Use DataFrame API; avoid RDD when possible.
+- **What:** Structured API with schema optimization.
+- **Why:** Better performance, optimization via Catalyst.
+- **How:** Schema-aware, optimized physical plan.
+- **Testing:** Schema validation, transformation correctness, action results.
+- **Failure Modes:** Schema mismatch, optimization bugs, UDF issues.
+- **Production:** Use DataFrame API; avoid RDD when possible.
 
 #### Spark SQL
-**What:** SQL interface for Spark.
-**Why:** Familiar querying with optimization.
-**How:** SQL parsed to logical plan, optimized by Catalyst.
-**Testing:** Query correctness, plan optimization, result validation.
-**Failure Modes:** Wrong results, slow queries, parsing errors.
-**Production:** Use DataFrame/SQL interchangeably.
+- **What:** SQL interface for Spark.
+- **Why:** Familiar querying with optimization.
+- **How:** SQL parsed to logical plan, optimized by Catalyst.
+- **Testing:** Query correctness, plan optimization, result validation.
+- **Failure Modes:** Wrong results, slow queries, parsing errors.
+- **Production:** Use DataFrame/SQL interchangeably.
 
 #### Structured Streaming
-**What:** Stream processing with microbatch model.
-**Why:** Fault-tolerant, exactly-once stream processing.
-**How:** Continuous queries with trigger intervals.
-**Testing:** Exactly-once semantics, watermarking, state management.
-**Failure Modes:** Duplicate processing, state loss, watermark issues.
-**Production:** Monitor stream processing lag, state size.
+- **What:** Stream processing with microbatch model.
+- **Why:** Fault-tolerant, exactly-once stream processing.
+- **How:** Continuous queries with trigger intervals.
+- **Testing:** Exactly-once semantics, watermarking, state management.
+- **Failure Modes:** Duplicate processing, state loss, watermark issues.
+- **Production:** Monitor stream processing lag, state size.
 
 ### Key Concepts
 
 #### Partitions
-**What:** Logical splits of data for parallel processing.
-**Why:** Enables parallelism, data locality.
-**How:** Hash/range partitioning, partitioning by key.
-**Testing:** Partition balance, skew detection, partition pruning.
-**Failure Modes:** Data skew, hot partitions, too many/few partitions.
-**Production:** Monitor partition size, avoid skew.
+- **What:** Logical splits of data for parallel processing.
+- **Why:** Enables parallelism, data locality.
+- **How:** Hash/range partitioning, partitioning by key.
+- **Testing:** Partition balance, skew detection, partition pruning.
+- **Failure Modes:** Data skew, hot partitions, too many/few partitions.
+- **Production:** Monitor partition size, avoid skew.
 
 #### Bucketing
-**What:** Technique to improve join performance.
-**Why:** Pre-shuffled data for efficient joins.
-**How:** Data hashed into fixed number of buckets.
-**Testing:** Bucket distribution, join correctness, skew handling.
-**Failure Modes:** Bucket skew, incorrect bucketing, join duplication.
-**Production:** Use bucketing for frequent joins.
+- **What:** Technique to improve join performance.
+- **Why:** Pre-shuffled data for efficient joins.
+- **How:** Data hashed into fixed number of buckets.
+- **Testing:** Bucket distribution, join correctness, skew handling.
+- **Failure Modes:** Bucket skew, incorrect bucketing, join duplication.
+- **Production:** Use bucketing for frequent joins.
 
 #### Shuffle
-**What:** Data redistribution between stages.
-**Why:** Required for groupBy, join, etc.
-**How:** Map output → sort → shuffle → reduce input.
-**Testing:** Shuffle correctness, data loss prevention, efficiency.
-**Failure Modes:** Shuffle failures, excessive shuffle, skew.
-**Production:** Monitor shuffle read/write, spilling to disk.
+- **What:** Data redistribution between stages.
+- **Why:** Required for groupBy, join, etc.
+- **How:** Map output → sort → shuffle → reduce input.
+- **Testing:** Shuffle correctness, data loss prevention, efficiency.
+- **Failure Modes:** Shuffle failures, excessive shuffle, skew.
+- **Production:** Monitor shuffle read/write, spilling to disk.
 
 #### Serialization
-**What:** Converting objects to bytes for network/storage.
-**Why:** Required for data transfer between nodes.
-**How:** Java/Kryo serialization, Avro/Parquet for columnar.
-**Testing:** Serialization correctness, deserialization, versioning.
-**Failure Modes:** Serialization errors, version incompatibility, bloated size.
-**Production:** Use Kryo; avoid Java serialization; use columnar formats.
+- **What:** Converting objects to bytes for network/storage.
+- **Why:** Required for data transfer between nodes.
+- **How:** Java/Kryo serialization, Avro/Parquet for columnar.
+- **Testing:** Serialization correctness, deserialization, versioning.
+- **Failure Modes:** Serialization errors, version incompatibility, bloated size.
+- **Production:** Use Kryo; avoid Java serialization; use columnar formats.
 
 #### Schema Evolution
-**What:** Handling changes to data schema over time.
-**Why:** Data sources change; need backward/forward compatibility.
-**How:** Add/drop columns, change types, rename columns.
-**Testing:** Backward/forward compatibility, data conversion.
-**Failure Modes:** Data loss, type conversion errors, schema drift.
-**Production:** Use schema registry; Avro/Parquet with evolution.
+- **What:** Handling changes to data schema over time.
+- **Why:** Data sources change; need backward/forward compatibility.
+- **How:** Add/drop columns, change types, rename columns.
+- **Testing:** Backward/forward compatibility, data conversion.
+- **Failure Modes:** Data loss, type conversion errors, schema drift.
+- **Production:** Use schema registry; Avro/Parquet with evolution.
 
 #### Exactly-Once Semantics
-**What:** Each record processed exactly once despite failures.
-**Why:** Prevents duplicates, ensures correctness.
-**How:** Idempotent operations, transactional writes, checkpointing.
-**Testing:** Duplicate detection, loss detection, recovery correctness.
-**Failure Modes:** Duplicates, data loss, inconsistent state.
-**Production:** Use checkpointing; idempotent sinks.
+- **What:** Each record processed exactly once despite failures.
+- **Why:** Prevents duplicates, ensures correctness.
+- **How:** Idempotent operations, transactional writes, checkpointing.
+- **Testing:** Duplicate detection, loss detection, recovery correctness.
+- **Failure Modes:** Duplicates, data loss, inconsistent state.
+- **Production:** Use checkpointing; idempotent sinks.
 
 #### Watermarking
-**What:** Tracking event time for late data handling.
-**Why:** Enables late data handling in streams.
-**How:** Max event time seen minus allowed lateness.
-**Testing:** Watermark advancement, late data handling, state cleanup.
-**Failure Modes:** Watermark stalls, incorrect lateness, state explosion.
-**Production:** Monitor watermark lag; tune allowed lateness.
+- **What:** Tracking event time for late data handling.
+- **Why:** Enables late data handling in streams.
+- **How:** Max event time seen minus allowed lateness.
+- **Testing:** Watermark advancement, late data handling, state cleanup.
+- **Failure Modes:** Watermark stalls, incorrect lateness, state explosion.
+- **Production:** Monitor watermark lag; tune allowed lateness.
 
 #### Checkpointing
-**What:** Saving streaming state for fault tolerance.
-**Why:** Enables recovery from failures.
-**How:** Periodic snapshot of state to reliable storage.
-**Testing:** Checkpoint correctness, recovery accuracy, performance impact.
-**Failure Modes:** Incomplete checkpoints, corruption, slow recovery.
-**Production:** Monitor checkpoint interval; storage for checkpoints.
+- **What:** Saving streaming state for fault tolerance.
+- **Why:** Enables recovery from failures.
+- **How:** Periodic snapshot of state to reliable storage.
+- **Testing:** Checkpoint correctness, recovery accuracy, performance impact.
+- **Failure Modes:** Incomplete checkpoints, corruption, slow recovery.
+- **Production:** Monitor checkpoint interval; storage for checkpoints.
 
 #### Data Skew
-**What:** Uneven data distribution across partitions.
-**Why:** Causes stragglers, poor resource utilization.
-**How:** Some partitions have much more data than others.
-**Testing:** Skew detection, partition balance, join performance.
-**Failure Modes:** Stragglers, long tails, resource waste.
-**Production:** Monitor partition sizes; use salting, broadcast joins.
+- **What:** Uneven data distribution across partitions.
+- **Why:** Causes stragglers, poor resource utilization.
+- **How:** Some partitions have much more data than others.
+- **Testing:** Skew detection, partition balance, join performance.
+- **Failure Modes:** Stragglers, long tails, resource waste.
+- **Production:** Monitor partition sizes; use salting, broadcast joins.
 
 ## 4. ARCHITECTURE
 
