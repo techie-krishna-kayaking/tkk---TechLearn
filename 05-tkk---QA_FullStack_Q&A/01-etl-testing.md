@@ -12,10 +12,10 @@
 - Has owned production data quality incidents end-to-end
 - Understands the difference between "pipeline succeeded" and "data is correct"
 
-**Senior Engineer:** Can write test cases, execute reconciliation, debug failures
-**Lead:** Can design framework, standardize approach across teams, mentor
-**Test Architect:** Designs overall test architecture, chooses automation tools, defines quality gates for all pipelines
-**Staff/Principal:** Influences data strategy across org, defines data quality policy, architects observability
+- **Senior Engineer:** Can write test cases, execute reconciliation, debug failures
+- **Lead:** Can design framework, standardize approach across teams, mentor
+- **Test Architect:** Designs overall test architecture, chooses automation tools, defines quality gates for all pipelines
+- **Staff/Principal:** Influences data strategy across org, defines data quality policy, architects observability
 
 ## 2. Technology Overview
 
