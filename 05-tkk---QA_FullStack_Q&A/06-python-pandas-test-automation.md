@@ -45,75 +45,75 @@ PyTest with fixtures, parametrization, CI/CD integration.
 
 ### PyTest Framework
 
-**What:** Testing framework for Python.
-**Why:** Standard testing framework, rich features.
-**How:** Test discovery, fixtures, parametrization, assertions.
-**Testing:** Use pytest for all tests.
-**Failure Modes:** Test isolation, fixture scope.
-**Production:** CI/CD integration.
+- **What:** Testing framework for Python.
+- **Why:** Standard testing framework, rich features.
+- **How:** Test discovery, fixtures, parametrization, assertions.
+- **Testing:** Use pytest for all tests.
+- **Failure Modes:** Test isolation, fixture scope.
+- **Production:** CI/CD integration.
 
 ### Pandas DataFrame
 
-**What:** 2D labeled data structure.
-**Why:** Efficient data manipulation.
-**How:** Series, indexing, operations.
-**Testing:** Validate shape, dtypes, content.
-**Failure Modes:** Memory, index, dtype issues.
-**Production:** Use categoricals, chunked reading.
+- **What:** 2D labeled data structure.
+- **Why:** Efficient data manipulation.
+- **How:** Series, indexing, operations.
+- **Testing:** Validate shape, dtypes, content.
+- **Failure Modes:** Memory, index, dtype issues.
+- **Production:** Use categoricals, chunked reading.
 
 ### Fixtures
 
-**What:** Setup/teardown for tests.
-**Why:** Reusable test setup.
-**How:** @pytest.fixture decorator.
-**Testing:** Use fixtures for test data.
-**Failure Modes:** Scope issues.
-**Production:** Session-scoped fixtures.
+- **What:** Setup/teardown for tests.
+- **Why:** Reusable test setup.
+- **How:** @pytest.fixture decorator.
+- **Testing:** Use fixtures for test data.
+- **Failure Modes:** Scope issues.
+- **Production:** Session-scoped fixtures.
 
 ### Parameterization
 
-**What:** Run same test with different inputs.
-**Why:** Reduce test code duplication.
-**How:** @pytest.mark.parametrize.
-**Testing:** Parametrize test cases.
-**Failure Modes:** Too many combinations.
-**Production:** Selective parameterization.
+- **What:** Run same test with different inputs.
+- **Why:** Reduce test code duplication.
+- **How:** @pytest.mark.parametrize.
+- **Testing:** Parametrize test cases.
+- **Failure Modes:** Too many combinations.
+- **Production:** Selective parameterization.
 
 ### Mocking
 
-**What:** Replace dependencies with test doubles.
-**Why:** Isolate tests.
-**How:** unittest.mock, pytest-mock.
-**Testing:** Mock external dependencies.
-**Failure Modes:** Over-mocking.
-**Production:** Mock databases, APIs.
+- **What:** Replace dependencies with test doubles.
+- **Why:** Isolate tests.
+- **How:** unittest.mock, pytest-mock.
+- **Testing:** Mock external dependencies.
+- **Failure Modes:** Over-mocking.
+- **Production:** Mock databases, APIs.
 
 ### Chunking
 
-**What:** Process data in chunks.
-**Why:** Handle large datasets.
-**How:** pandas.read_csv(chunksize=N).
-**Testing:** Test chunk processing logic.
-**Failure Modes:** Incomplete chunks.
-**Production:** Use for large files.
+- **What:** Process data in chunks.
+- **Why:** Handle large datasets.
+- **How:** pandas.read_csv(chunksize=N).
+- **Testing:** Test chunk processing logic.
+- **Failure Modes:** Incomplete chunks.
+- **Production:** Use for large files.
 
 ### MultiIndex
 
-**What:** Hierarchical index.
-**Why:** Complex data organization.
-**How:** pd.MultiIndex.from_tuples.
-**Testing:** Validate MultiIndex levels.
-**Failure Modes:** Level alignment.
-**Production:** Use for grouped operations.
+- **What:** Hierarchical index.
+- **Why:** Complex data organization.
+- **How:** pd.MultiIndex.from_tuples.
+- **Testing:** Validate MultiIndex levels.
+- **Failure Modes:** Level alignment.
+- **Production:** Use for grouped operations.
 
 ### Type Hints
 
-**What:** Type annotations in Python.
-**Why:** Code clarity, IDE support.
-**How:** typing module.
-**Testing:** Validate types.
-**Failure Modes:** Runtime type checking.
-**Production:** Use for maintainability.
+- **What:** Type annotations in Python.
+- **Why:** Code clarity, IDE support.
+- **How:** typing module.
+- **Testing:** Validate types.
+- **Failure Modes:** Runtime type checking.
+- **Production:** Use for maintainability.
 
 ## 4. ARCHITECTURE
 

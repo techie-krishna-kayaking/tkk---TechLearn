@@ -47,52 +47,52 @@ PyTest with Spark fixtures, parameterized tests, CI/CD integration, golden datas
 ## 3. Core Concepts
 
 ### Spark Session Management
-**What:** Entry point for Spark functionality.
-**Why:** Controls cluster resources and configuration.
-**How:** SparkSession.builder.appName().getOrCreate()
-**Testing:** Isolate sessions per test, proper cleanup.
-**Failure Modes:** Resource leaks, configuration conflicts.
-**Production:** Configure for appropriate resource allocation.
+- **What:** Entry point for Spark functionality.
+- **Why:** Controls cluster resources and configuration.
+- **How:** SparkSession.builder.appName().getOrCreate()
+- **Testing:** Isolate sessions per test, proper cleanup.
+- **Failure Modes:** Resource leaks, configuration conflicts.
+- **Production:** Configure for appropriate resource allocation.
 
 ### DataFrame Operations
-**What:** Spark's structured API for distributed data processing.
-**Why:** Optimized execution via Catalyst optimizer.
-**How:** Immutable distributed collections with schema.
-**Testing:** Validate schema, transformations, actions.
-**Failure Modes:** Schema mismatch, optimization bugs.
-**Production:** Use DataFrame API over RDD when possible.
+- **What:** Spark's structured API for distributed data processing.
+- **Why:** Optimized execution via Catalyst optimizer.
+- **How:** Immutable distributed collections with schema.
+- **Testing:** Validate schema, transformations, actions.
+- **Failure Modes:** Schema mismatch, optimization bugs.
+- **Production:** Use DataFrame API over RDD when possible.
 
 ### Test Data Generation
-**What:** Creating representative test datasets.
-**Why:** Ensures test reliability and reproducibility.
-**How:** Synthetic data, sampling production data, edge cases.
-**Testing:** Validate data quality and representativeness.
-**Failure Modes:** Biased samples, insufficient edge cases.
-**Production:** Use production-like data distributions.
+- **What:** Creating representative test datasets.
+- **Why:** Ensures test reliability and reproducibility.
+- **How:** Synthetic data, sampling production data, edge cases.
+- **Testing:** Validate data quality and representativeness.
+- **Failure Modes:** Biased samples, insufficient edge cases.
+- **Production:** Use production-like data distributions.
 
 ### Golden Datasets
-**What:** Pre-validated expected outputs for comparison.
-**Why:** Provides ground truth for validation.
-**How:** Stored test data with expected results.
-**Testing:** Compare actual output to golden dataset.
-**Failure Modes:** Stale golden datasets, version drift.
-**Production:** Automate golden dataset updates.
+- **What:** Pre-validated expected outputs for comparison.
+- **Why:** Provides ground truth for validation.
+- **How:** Stored test data with expected results.
+- **Testing:** Compare actual output to golden dataset.
+- **Failure Modes:** Stale golden datasets, version drift.
+- **Production:** Automate golden dataset updates.
 
 ### Schema Validation
-**What:** Verifying DataFrame schema matches expectations.
-**Why:** Prevents runtime errors from schema changes.
-**How:** Compare actual vs expected StructType.
-**Testing:** Test schema evolution compatibility.
-**Failure Modes:** Silent data corruption from schema drift.
-**Production:** Enforce schema contracts in CI/CD.
+- **What:** Verifying DataFrame schema matches expectations.
+- **Why:** Prevents runtime errors from schema changes.
+- **How:** Compare actual vs expected StructType.
+- **Testing:** Test schema evolution compatibility.
+- **Failure Modes:** Silent data corruption from schema drift.
+- **Production:** Enforce schema contracts in CI/CD.
 
 ### Performance Testing
-**What:** Measuring execution time, resource usage, scalability.
-**Why:** Ensures efficient cluster utilization.
-**How:** Monitor Spark UI metrics, execution plans.
-**Testing:** Benchmark with production-like data volumes.
-**Failure Modes:** Performance regressions, resource waste.
-**Production:** Establish performance baselines and SLAs.
+- **What:** Measuring execution time, resource usage, scalability.
+- **Why:** Ensures efficient cluster utilization.
+- **How:** Monitor Spark UI metrics, execution plans.
+- **Testing:** Benchmark with production-like data volumes.
+- **Failure Modes:** Performance regressions, resource waste.
+- **Production:** Establish performance baselines and SLAs.
 
 ## 4. ARCHITECTURE
 
