@@ -210,11 +210,6 @@ This repository blends the toolchain used in real-world data and platform work:
   If you are building modern data platforms and care deeply about quality, reliability, automation, and AI-enabled delivery, let's connect.
 </p>
 
----
-
-<p align="center">
-  <img src="https://komarev.com/ghpvc/?username=techiekrishnakayaking&style=flat-square&color=blue" alt="Profile views" />
-</p>
 
 ---
 
