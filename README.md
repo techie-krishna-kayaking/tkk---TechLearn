@@ -1,153 +1,222 @@
-﻿# tkk---TechLearn
+﻿<p align="center">
+  <img src="https://img.shields.io/badge/TechLearn-Data%20%7C%20AI%20%7C%20QA-0B1026?style=for-the-badge&logo=github" alt="TechLearn Banner" />
+</p>
 
-An interview-preparation library for senior data, AI, and quality-engineering roles. The repository is organized as four independent learning tracks, combining concept handbooks, interview question banks, SQL exercises, Python labs, and one small DataOps sample project.
+<h1 align="center">TechLearn</h1>
+<h3 align="center">By Techie Krishna Kayaking</h3>
 
-## At a glance
+<p align="center">
+  <img src="https://img.shields.io/badge/Python-3776AB?style=flat-square&logo=python&logoColor=white" alt="Python" />
+  <img src="https://img.shields.io/badge/SQL-4169E1?style=flat-square&logo=sqlite&logoColor=white" alt="SQL" />
+  <img src="https://img.shields.io/badge/PySpark-E25A1C?style=flat-square&logo=apache-spark&logoColor=white" alt="PySpark" />
+  <img src="https://img.shields.io/badge/Pandas-150458?style=flat-square&logo=pandas&logoColor=white" alt="Pandas" />
+  <img src="https://img.shields.io/badge/dbt-FF694B?style=flat-square&logo=dbt&logoColor=white" alt="dbt" />
+  <img src="https://img.shields.io/badge/Airflow-017CEE?style=flat-square&logo=apache-airflow&logoColor=white" alt="Airflow" />
+  <img src="https://img.shields.io/badge/Databricks-FF3621?style=flat-square&logo=databricks&logoColor=white" alt="Databricks" />
+  <img src="https://img.shields.io/badge/AI%2FML-LLM%20%7C%20RAG%20%7C%20MLOps-5A67D8?style=flat-square" alt="AI/ML" />
+</p>
 
-| Track | Audience | Learning units | Main formats |
-| --- | --- | ---: | --- |
-| [Data Analyst](01-tkk---DA_Engineer/README.md) | Senior / Lead Data Analysts | 16 chapters | SQL and Python exercises |
-| [Data Engineer](02-tkk---DataEngineer/README.md) | Senior / Staff Data Engineers | 22 handbooks | Markdown, Python, Databricks notebooks, runnable labs |
-| [AI Engineer](03-tkk---AI_Engineer/README.md) | Senior / Staff AI and ML Engineers | 16 chapters | Python and SQL labs |
-| [QA / Full-Stack Testing](04-tkk---QA_FullStack_Q%26A/README.md) | Senior Test Engineers, Test Architects, and Quality Engineers | 15 guides | Markdown interview guides |
+A practical, structured learning vault for modern data, AI, and quality engineering roles. This repository brings together interview prep, technical handbooks, SQL and Python exercises, data engineering workflows, AI engineering labs, and senior QA/testing knowledge in one place.
 
-Together, the tracks provide **69 chapters and handbooks**. They can be studied independently; the suggested sequence below is a roadmap, not a prerequisite imposed by the repository.
+## Why this repo exists
 
-## Choose a track
+This project is built for people who want to master:
 
-### 1. Data Analyst
+- SQL and analytics engineering
+- Python and PySpark fundamentals
+- Data engineering system design and production thinking
+- AI/ML and LLM system design
+- Test architecture, automation, and quality engineering
+- Interview-ready explanations for senior and staff-level roles
 
-Start here for product analytics, experimentation, and analytics-engineering interviews. The 16 chapters cover:
+It is organized as independent tracks, each designed to be studied in a focused, real-world sequence.
 
-- Advanced SQL, Pandas, statistics, A/B testing, and PySpark
-- Data modeling, product metrics, cohort/retention analysis, and case studies
-- Causal inference, dbt, BI/semantic layers, forecasting, cloud platforms, and analytics system design
-- Senior behavioral and leadership preparation
+---
 
-Open the [Data Analyst track](01-tkk---DA_Engineer/README.md) or begin with [advanced SQL](01-tkk---DA_Engineer/Chapter_01_Advanced_SQL/01_window_functions.sql).
+## Repository stats
 
-### 2. Data Engineer
+<p align="center">
+  <img src="https://img.shields.io/badge/Tracks-5-0A84FF?style=for-the-badge" alt="5 tracks" />
+  <img src="https://img.shields.io/badge/Learning%20units-69-8B5CF6?style=for-the-badge" alt="69 learning units" />
+  <img src="https://img.shields.io/badge/Python_LOC-15%2C246-3776AB?style=for-the-badge&logo=python&logoColor=white" alt="15,246 Python LOC" />
+  <img src="https://img.shields.io/badge/SQL_LOC-2%2C060-4169E1?style=for-the-badge&logo=sqlite&logoColor=white" alt="2,060 SQL LOC" />
+  <img src="https://img.shields.io/badge/Spark_related_lines-3%2C611-E25A1C?style=for-the-badge&logo=apache-spark&logoColor=white" alt="3,611 Spark-related lines" />
+  <img src="https://img.shields.io/badge/Pandas_related_lines-2%2C008-150458?style=for-the-badge&logo=pandas&logoColor=white" alt="2,008 Pandas-related lines" />
+</p>
 
-This is the broadest track: 22 handbooks spanning foundations through production data systems.
+> These counts are based on the repository content as stored in the workspace. Spark and Pandas totals reflect Python examples referencing those technologies; SQL totals reflect SQL files.
 
-- Python, PySpark/SQL, Git, DSA, cloud, Kafka, Airflow, dbt, and system design
-- Behavioral interviewing, advanced DSA, production troubleshooting, AWS optimization, and ML data pipelines
-- Data modeling, warehouse-grade SQL, lakehouse table formats, governance, DataOps, and distributed-systems fundamentals
+## Learning tracks
 
-The later handbooks include local practice programs and a [sample DataOps pipeline project](02-tkk---DataEngineer/21_DataOps_and_Infrastructure_Handbook/sample_pipeline_project) with Docker, Compose, Terraform, pytest tests, and a GitHub Actions workflow.
+| Track | Folder | Focus | Key topics |
+| --- | --- | --- | --- |
+| Data Analyst | [01-tkk---DA_Engineer](01-tkk---DA_Engineer) | Analytics, experimentation, BI | SQL, statistics, A/B testing, dbt, metrics, product analysis |
+| Data Engineer | [02-tkk---DataEngineer](02-tkk---DataEngineer) | Production data systems | Python, PySpark, SQL, DataOps, Kafka, Airflow, lakehouse, governance |
+| AI Engineer | [03-tkk---AI_Engineer](03-tkk---AI_Engineer) | AI / ML / LLM engineering | Python, ML basics, RAG, agents, MLOps, model evaluation |
+| QA / Full-Stack Testing | [04-tkk---QA_FullStack_Q&A](04-tkk---QA_FullStack_Q&A) | Quality engineering | ETL testing, BI testing, automation, Selenium, Playwright, AI testing |
+| DE Q&A | [05-tkk---DE_Q&A](05-tkk---DE_Q&A) | Deep interview prep | Data engineering concepts, cloud, SQL, AI data engineering |
 
-Open the [Data Engineer track](02-tkk---DataEngineer/README.md) or start with [Python fundamentals](02-tkk---DataEngineer/01_Python_Interview_Handbook/01_Basics.py).
+---
 
-### 3. AI Engineer
+## Code footprint by folder
 
-This 16-chapter track progresses from Python and core ML to production LLM systems.
+| Folder | Python LOC | SQL LOC | Spark-related lines | Pandas-related lines | Notes |
+| --- | ---: | ---: | ---: | ---: | --- |
+| [01-tkk---DA_Engineer](01-tkk---DA_Engineer) | 1,751 | 1,822 | 391 | 988 | Analytics engineering and SQL-heavy interview prep |
+| [02-tkk---DataEngineer](02-tkk---DataEngineer) | 9,609 | 0 | 3,220 | 793 | Broadest engineering track with Python practice and system design |
+| [03-tkk---AI_Engineer](03-tkk---AI_Engineer) | 3,886 | 238 | 0 | 227 | ML, GenAI, RAG, LLM, and MLOps domain |
+| [04-tkk---QA_FullStack_Q&A](04-tkk---QA_FullStack_Q&A) | 0 | 0 | 0 | 0 | Mostly markdown interview content and QA frameworks |
+| [05-tkk---DE_Q&A](05-tkk---DE_Q&A) | 0 | 0 | 0 | 0 | Deep question-answer bank for data engineering interviews |
 
-- Python, ML fundamentals, neural networks, LLMs/GenAI, ML system design, MLOps, SQL for AI, and DSA
-- LLM inference optimization, advanced RAG, agents and tool use, evaluation/observability, fine-tuning/alignment, safety, and distributed training
-- Senior behavioral and negotiation practice
+## What is inside each track?
 
-Chapters 09-16 are CPU-friendly runnable labs; they use only `numpy` where a third-party package is needed. Open the [AI Engineer track](03-tkk---AI_Engineer/README.md) or begin with [Python for AI](03-tkk---AI_Engineer/Chapter_01_Python_for_AI/01_python_for_ai.py).
+### 1) Data Analyst
 
-### 4. QA / Full-Stack Testing
+- Advanced SQL, window functions, and analytics patterns
+- Product metrics and experimentation
+- A/B testing, retention, cohort analysis
+- dbt, semantic layer, and BI workflows
 
-The QA track is a 15-guide interview library for senior quality-engineering and test-architecture roles:
+Start here: [01-tkk---DA_Engineer/README.md](01-tkk---DA_Engineer/README.md)
 
-- ETL, data warehouse, BI, big-data, and data-quality testing
-- Python/Pandas and PySpark test automation; advanced SQL
-- Web automation, Selenium, and Playwright
-- AI, ML, AI-agent, and LLM testing
+### 2) Data Engineer
 
-Open the [QA / Full-Stack Testing track](04-tkk---QA_FullStack_Q%26A/README.md) and follow its recommended study order.
+- Python interview prep and challenge scripts
+- PySpark SQL practice and distributed processing
+- Data modeling, warehousing, lakehouse concepts
+- Data quality, governance, DataOps, and distributed systems
 
-## Recommended paths
+Start here: [02-tkk---DataEngineer/README.md](02-tkk---DataEngineer/README.md)
 
-| Goal | Suggested route |
+### 3) AI Engineer
+
+- Python for AI and model engineering
+- LLM, RAG, advanced prompting, and evaluation patterns
+- MLOps, deployment, observability, and optimization
+- Senior behavioral and negotiation preparation
+
+Start here: [03-tkk---AI_Engineer/README.md](03-tkk---AI_Engineer/README.md)
+
+### 4) QA / Full-Stack Testing
+
+- ETL, warehouse, BI, and big-data testing
+- Test automation with Python, Pandas, PySpark, Selenium, Playwright
+- AI/ML and LLM testing strategies
+- Senior testing architecture guidance
+
+Start here: [04-tkk---QA_FullStack_Q&A/README.md](04-tkk---QA_FullStack_Q&A/README.md)
+
+### 5) DE Q&A
+
+- Data engineering interview deep dives
+- System design and cloud architecture questions
+- Python, SQL, Spark, and AI data engineering interview prep
+
+Start here: [05-tkk---DE_Q&A](05-tkk---DE_Q&A)
+
+---
+
+## Suggested learning paths
+
+| Goal | Best track |
 | --- | --- |
-| Product or business analytics | Complete the Data Analyst track; focus on SQL, metrics, experimentation, causal inference, and case studies. |
-| Platform, batch, or streaming data engineering | Use the Data Analyst track for SQL/Python foundations if needed, then follow the Data Engineer handbooks in numerical order. |
-| Applied ML, LLM applications, or ML infrastructure | Ensure you are comfortable with Python, SQL, and data systems, then follow the AI Engineer chapters in order. |
-| Data, web, or AI quality engineering | Follow the QA guides in order; start with ETL/DWH/BI testing before automation and AI-focused testing. |
+| Product analytics / experimentation | Data Analyst |
+| Data platform / batch / streaming engineering | Data Engineer |
+| ML, GenAI, AI systems, LLM apps | AI Engineer |
+| Quality engineering / automation / test architecture | QA / Full-Stack Testing |
+| Interview prep across data engineering topics | DE Q&A |
 
 ## Getting started
-
-Clone the repository and work inside the folder for your selected track:
 
 ```bash
 git clone https://github.com/techie-krishna-kayaking/tkk---TechLearn.git
 cd tkk---TechLearn
 ```
 
-The repository does not have one global runtime or application to launch. Install only the dependencies for the exercises you intend to run.
-
-### Data Analyst exercises
+### Typical setup
 
 ```bash
 python -m venv .venv
-# Windows PowerShell: .\.venv\Scripts\Activate.ps1
-# macOS/Linux: source .venv/bin/activate
-python -m pip install -r 01-tkk---DA_Engineer/requirements.txt
+# Windows PowerShell
+# .\.venv\Scripts\Activate.ps1
+# macOS / Linux
+# source .venv/bin/activate
 ```
 
-Run Python files with `python <path-to-file>`. Run the `.sql` exercises in Databricks SQL or a compatible SQL environment as indicated in the lesson.
+Install only the dependencies needed for the track you are studying.
 
-### Data Engineer practice labs
+### Example commands
 
 ```bash
-python -m venv .venv
-# Activate the environment, then:
-python -m pip install -r 02-tkk---DataEngineer/requirements_practice.txt
 python 02-tkk---DataEngineer/18_Advanced_SQL_Handbook/02_Practice_Advanced_SQL.py
-```
-
-The real Delta Lake demo in handbook 19 additionally requires Java plus the optional `pyspark` and `delta-spark` packages documented in `requirements_practice.txt`.
-
-To run the DataOps sample project's tests:
-
-```bash
-cd 02-tkk---DataEngineer/21_DataOps_and_Infrastructure_Handbook/sample_pipeline_project
-python -m pip install -r requirements.txt
-pytest -q
-```
-
-### AI Engineer runnable labs
-
-```bash
-python -m venv .venv
-# Activate the environment, then:
-python -m pip install -r 03-tkk---AI_Engineer/requirements_labs.txt
 python 03-tkk---AI_Engineer/Chapter_10_Advanced_RAG/01_advanced_rag.py
 ```
 
-The specialist labs are designed to run locally on CPU and do not require API keys or network access.
+SQL exercises can be run in Databricks SQL, Snowflake, BigQuery, or any compatible SQL engine as indicated in the chapter.
 
-### QA / Full-Stack Testing guides
+---
 
-No package installation is needed to read the QA guides. Work through the Markdown files in the [track README](04-tkk---QA_FullStack_Q%26A/README.md), then implement the exercises in the tooling appropriate to your environment.
+## Tech stack & tooling
 
-## Repository layout
+<p align="center">
+  <img src="https://img.shields.io/badge/Python-3776AB?style=flat-square&logo=python&logoColor=white" alt="Python" />
+  <img src="https://img.shields.io/badge/SQL-4169E1?style=flat-square&logo=sqlite&logoColor=white" alt="SQL" />
+  <img src="https://img.shields.io/badge/PySpark-E25A1C?style=flat-square&logo=apache-spark&logoColor=white" alt="PySpark" />
+  <img src="https://img.shields.io/badge/Pandas-150458?style=flat-square&logo=pandas&logoColor=white" alt="Pandas" />
+  <img src="https://img.shields.io/badge/dbt-FF694B?style=flat-square&logo=dbt&logoColor=white" alt="dbt" />
+  <img src="https://img.shields.io/badge/Docker-2496ED?style=flat-square&logo=docker&logoColor=white" alt="Docker" />
+  <img src="https://img.shields.io/badge/Airflow-017CEE?style=flat-square&logo=apache-airflow&logoColor=white" alt="Airflow" />
+  <img src="https://img.shields.io/badge/GitHub_Actions-2088FF?style=flat-square&logo=githubactions&logoColor=white" alt="GitHub Actions" />
+  <img src="https://img.shields.io/badge/Databricks-FF3621?style=flat-square&logo=databricks&logoColor=white" alt="Databricks" />
+  <img src="https://img.shields.io/badge/AWS-Amazon_Web_Services-232F3E?style=flat-square&logo=amazonaws&logoColor=white" alt="AWS" />
+  <img src="https://img.shields.io/badge/Azure-0078D4?style=flat-square&logo=microsoftazure&logoColor=white" alt="Azure" />
+  <img src="https://img.shields.io/badge/GCP-4285F4?style=flat-square&logo=google-cloud&logoColor=white" alt="GCP" />
+</p>
 
-```text
-tkk---TechLearn/
-|- 01-tkk---DA_Engineer/       # 16 Data Analyst chapters
-|- 02-tkk---DataEngineer/      # 22 Data Engineer handbooks + DataOps sample project
-|- 03-tkk---AI_Engineer/       # 16 AI Engineer chapters
-|- 04-tkk---QA_FullStack_Q&A/  # 15 QA and test-architecture guides
-`- README.md
-```
+This repository blends the toolchain used in real-world data and platform work:
 
-## How to study effectively
+- Python for scripting and automation
+- SQL for analytics and transformations
+- PySpark for distributed data processing
+- Pandas for local data exploration and experimentation
+- dbt for analytics engineering workflows
+- Airflow, Docker, and CI/CD patterns for deployment and operations
+- Cloud and modern data platform concepts across AWS, Azure, and GCP
 
-1. Follow the modules in order unless you already have the stated prerequisite skills.
-2. Run and modify the Python/SQL examples instead of only reading them.
-3. Use the question banks to practise concise, trade-off-aware interview explanations.
-4. For system-design and behavioral material, rehearse your answer aloud and connect it to measurable work you have done.
-5. Treat compensation and role-level references in individual track documents as aspirational context, not guarantees.
+---
 
-## Notes for contributors
+## Study approach
 
-- Keep material within its track and preserve the numeric order of chapters and handbooks.
-- Add any new dependency to the requirements file belonging to that track rather than creating a global dependency list.
-- Do not commit virtual environments, build outputs, generated datasets, model files, or logs; the repository's `.gitignore` covers these common artifacts.
+1. Learn the fundamentals before moving into advanced system design.
+2. Practice with runnable Python/PySpark examples instead of only reading theory.
+3. Build a habit of explaining trade-offs clearly and concretely.
+4. Treat the interview question sets as high-signal practice for real discussions.
+5. Tie each concept back to a production scenario or measurable business outcome.
+
+---
+
+### Let's Connect
+
+<p align="center">
+  <a href="https://www.linkedin.com/in/krishnakayaking/"><img src="https://img.shields.io/badge/LinkedIn-Krishna_Kayaking-0A66C2?style=flat-square&logo=linkedin" alt="LinkedIn" /></a>&nbsp;
+  <a href="https://www.youtube.com/@TechieKrishnaKayaking"><img src="https://img.shields.io/badge/YouTube-Techie_Krishna_Kayaking-FF0000?style=flat-square&logo=youtube" alt="YouTube" /></a>&nbsp;
+  <a href="https://www.techiekrishnakayaking.com/"><img src="https://img.shields.io/badge/Website-techiekrishnakayaking.com-000?style=flat-square&logo=google-chrome&logoColor=white" alt="Website" /></a>&nbsp;
+  <a href="https://topmate.io/techie_krishna_kayaking"><img src="https://img.shields.io/badge/Topmate-Book_a_Session-FFCA28?style=flat-square&logo=bookstack&logoColor=black" alt="Topmate" /></a>&nbsp;
+  <a href="https://www.instagram.com/techiekrishnakayaking/"><img src="https://img.shields.io/badge/Instagram-techiekrishnakayaking-E4405F?style=flat-square&logo=instagram&logoColor=white" alt="Instagram" /></a>&nbsp;
+  <a href="https://play.google.com/store/apps/details?id=co.diaz.ycvkc&hl=en_IN"><img src="https://img.shields.io/badge/Play_Store-Download_App-414141?style=flat-square&logo=google-play&logoColor=white" alt="Play Store" /></a>
+</p>
+
+<p align="center">
+  If you are building modern data platforms and care deeply about quality, reliability, automation, and AI-enabled delivery, let's connect.
+</p>
+
+---
+
+<p align="center">
+  <img src="https://komarev.com/ghpvc/?username=techiekrishnakayaking&style=flat-square&color=blue" alt="Profile views" />
+</p>
+
+---
 
 ## License
 
