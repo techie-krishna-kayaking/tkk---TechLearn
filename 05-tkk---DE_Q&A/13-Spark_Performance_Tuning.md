@@ -1220,9 +1220,11 @@ Compare the slow run with a known-good baseline and find the stage where runtime
 # Inspect logical/physical plan before changing cluster settings
 query_df.explain("formatted")
 
-# Add workload/run identifiers to logs or job metrics
+# Collect low-cost context; use source/job metrics for row counts rather than
+# running an extra full count() action solely for diagnosis.
 run_metrics = {
-    "input_rows": source_df.count(),
+    "spark_version": spark.version,
+    "input_partitions": source_df.rdd.getNumPartitions(),
     "output_partitions": query_df.rdd.getNumPartitions()
 }
 print(run_metrics)
@@ -1651,13 +1653,23 @@ metrics.show()
 Retries must be bounded and writes idempotent. For streaming, make foreachBatch logic safe for replay.
 
 ```python
+from delta.tables import DeltaTable
+
 def process_batch(batch_df, batch_id):
-    # Use a stable key/merge or another idempotent sink strategy.
-    # batch_id can support audit tracking, but do not assume it alone makes writes idempotent.
+    # Target table must already exist. event_id must uniquely identify an event.
+    # Deduplicate source rows deterministically before MERGE.
     deduped = batch_df.dropDuplicates(["event_id"])
-    deduped.write.format("delta").mode("append").saveAsTable("analytics.events_stage")
+    target = DeltaTable.forName(spark, "analytics.events_stage")
+    (
+        target.alias("t")
+        .merge(deduped.alias("s"), "t.event_id = s.event_id")
+        .whenMatchedUpdateAll()
+        .whenNotMatchedInsertAll()
+        .execute()
+    )
 
 # stream.writeStream.foreachBatch(process_batch).option("checkpointLocation", checkpoint_path).start()
+# If events can be corrected, resolve source ordering before dropDuplicates; don't use an arbitrary winner.
 ```
 
 ## 41. Slow streaming
