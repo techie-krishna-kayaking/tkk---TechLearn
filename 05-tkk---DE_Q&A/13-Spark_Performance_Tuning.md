@@ -1067,3 +1067,755 @@ For any Spark performance question, structure your response as:
 ## Final Reminder
 
 Spark performance is workload-dependent. Prefer query-plan evidence and measured experiments over memorized configuration values. A Staff/Principal engineer should be able to explain not only **what to change**, but also **why it works, when it fails, how correctness is protected, and how the improvement will remain measurable in production**.
+---
+
+# Practical Code Cookbook — Examples for All 50 Issues
+
+This section adds concrete PySpark/Spark SQL examples for the 50 topics above. Replace table names, paths, partition counts, schemas and keys with values from your workload. These are starting patterns, not universal tuning values. Validate plans, runtime support, data correctness and performance before deploying to production.
+
+**Common imports used by some examples:**
+```python
+from pyspark.sql import functions as F
+from pyspark.sql import Window
+```
+
+## 1. Data skew
+
+Profile keys first. AQE settings and availability depend on Spark/runtime version; validate the physical plan.
+
+```python
+from pyspark.sql import functions as F
+
+# Find hot keys before choosing a skew strategy
+hot_keys = (
+    events.groupBy("customer_id").count()
+    .orderBy(F.desc("count")).limit(20)
+)
+hot_keys.show(truncate=False)
+
+spark.conf.set("spark.sql.adaptive.enabled", "true")
+spark.conf.set("spark.sql.adaptive.skewJoin.enabled", "true")
+```
+
+## 2. Large shuffle
+
+Reduce rows and row width before wide exchanges; repartition only when downstream partitioning benefits.
+
+```python
+from pyspark.sql import functions as F
+
+slim = (
+    events.filter(F.col("event_date") >= F.lit("2026-01-01"))
+    .select("customer_id", "event_type", "amount")
+)
+result = slim.groupBy("customer_id").agg(F.sum("amount").alias("total"))
+result.explain("formatted")
+```
+
+## 3. Small files
+
+Delta SQL shown for Databricks/Delta environments; the supported options depend on the platform/runtime.
+
+```sql
+# Databricks SQL / Delta Lake
+OPTIMIZE analytics.fact_events;
+
+-- If queries commonly filter by these columns and the platform supports it:
+OPTIMIZE analytics.fact_events
+ZORDER BY (event_date, customer_id);
+```
+
+## 4. Memory spill
+
+Use Spark UI spill/GC metrics to choose partition sizing; do not blindly raise memory.
+
+```python
+# Illustrative starting point; benchmark the target workload
+spark.conf.set("spark.sql.adaptive.enabled", "true")
+spark.conf.set("spark.sql.adaptive.coalescePartitions.enabled", "true")
+
+# Increase parallelism for an oversized input before a wide operation
+balanced = large_df.repartition(800, "customer_id")
+balanced.groupBy("customer_id").count().explain("formatted")
+```
+
+## 5. Slow reads
+
+Column pruning and filter pushdown depend on the source format and predicate support.
+
+```python
+from pyspark.sql import functions as F
+
+events = (
+    spark.read.parquet("/lake/events/")
+    .select("event_date", "customer_id", "amount")
+    .filter(F.col("event_date") >= F.lit("2026-10-01"))
+)
+events.explain("formatted")
+```
+
+## 6. Excessive data read
+
+Check scan metrics in Spark UI to confirm fewer files/bytes are actually read.
+
+```python
+from pyspark.sql import functions as F
+
+# Match the predicate type to the column type and project only needed columns
+daily = (
+    spark.read.table("analytics.fact_events")
+    .where((F.col("event_date") >= F.lit("2026-10-01")) &
+           (F.col("event_date") < F.lit("2026-10-08")))
+    .select("event_date", "customer_id", "amount")
+)
+```
+
+## 7. Repeated computation
+
+Persist only when reuse saves more than materialization, storage and GC cost.
+
+```python
+from pyspark import StorageLevel
+
+shared = expensive_transform(source_df).persist(StorageLevel.MEMORY_AND_DISK)
+try:
+    row_count = shared.count()
+    totals = shared.groupBy("region").sum("amount")
+    totals.write.mode("overwrite").saveAsTable("analytics.region_totals")
+finally:
+    shared.unpersist()
+```
+
+## 8. Memory + disk usage
+
+Use Spark UI Storage, Executors and task spill metrics to distinguish cached blocks from execution spill.
+
+```python
+# Inspect persisted RDD/DataFrame usage in the Spark UI, then release unused cache
+cached_df.unpersist(blocking=True)
+
+# Persist an actively reused intermediate only if measurement justifies it
+working = transformed.persist()
+working.count()  # Materialize intentionally; remove if no longer reused
+# working.unpersist()
+```
+
+## 9. Low parallelism
+
+Choose partition counts from input size, task duration and cluster capacity, not a fixed universal number.
+
+```python
+# Repartition to expose more parallel work for a downstream aggregation
+parallel_df = large_df.repartition(400, "customer_id")
+
+print("partitions:", parallel_df.rdd.getNumPartitions())
+parallel_df.groupBy("customer_id").count().explain("formatted")
+```
+
+## 10. Slow runtime
+
+Compare the slow run with a known-good baseline and find the stage where runtime diverged.
+
+```python
+# Inspect logical/physical plan before changing cluster settings
+query_df.explain("formatted")
+
+# Add workload/run identifiers to logs or job metrics
+run_metrics = {
+    "input_rows": source_df.count(),
+    "output_partitions": query_df.rdd.getNumPartitions()
+}
+print(run_metrics)
+```
+
+## 11. Expensive UDFs
+
+Prefer built-in expressions when semantics match; test nulls and edge cases before replacing a UDF.
+
+```python
+from pyspark.sql import functions as F
+
+# Avoid a Python UDF for simple conditional logic
+cleaned = df.withColumn(
+    "status_group",
+    F.when(F.col("status").isin("OK", "SUCCESS"), F.lit("success"))
+     .otherwise(F.lit("other"))
+)
+```
+
+## 12. Slow joins
+
+Check row multiplicity and keys, then inspect the join strategy and shuffle metrics.
+
+```python
+from pyspark.sql import functions as F
+
+facts_slim = facts.select("customer_id", "amount", "event_date")
+dims_slim = customers.select("customer_id", "segment").dropDuplicates(["customer_id"])
+
+joined = facts_slim.join(dims_slim, on="customer_id", how="left")
+joined.explain("formatted")
+```
+
+## 13. Unnecessary columns
+
+Catalyst may already prune columns; confirm scan projections and exchange schemas in the plan.
+
+```python
+facts_slim = facts.select("customer_id", "order_date", "amount")
+customers_slim = customers.select("customer_id", "region")
+
+result = facts_slim.join(customers_slim, "customer_id")
+result.explain("formatted")
+```
+
+## 14. Large dataset joins
+
+For very large tables, broadcast may be unsafe; validate shuffle partition balance and join cardinality.
+
+```python
+from pyspark.sql import functions as F
+
+left_slim = large_fact.filter(F.col("event_date") >= "2026-01-01") \
+    .select("join_key", "event_date", "metric")
+right_slim = large_dim.select("join_key", "attribute")
+
+large_join = left_slim.join(right_slim, "join_key", "inner")
+large_join.explain("formatted")
+```
+
+## 15. Small lookup tables
+
+Broadcast only after measuring the filtered relation size and executor memory impact.
+
+```python
+from pyspark.sql.functions import broadcast
+
+lookup_slim = lookup.select("code", "description")
+enriched = facts.join(broadcast(lookup_slim), on="code", how="left")
+enriched.explain("formatted")
+```
+
+## 16. Serialization overhead
+
+Avoid moving structured data into Python objects unless lower-level processing is necessary.
+
+```python
+from pyspark.sql import functions as F
+
+# Native Spark expressions keep computation in Spark's optimized execution path
+result = (
+    df.select("id", "raw_value")
+      .withColumn("normalized", F.lower(F.trim("raw_value")))
+      .withColumn("value_length", F.length("raw_value"))
+)
+result.explain("formatted")
+```
+
+## 17. High GC time
+
+Confirm high GC against executor heap, spill, cache and task-level skew before changing heap sizing.
+
+```python
+# Reduce object-heavy intermediates and avoid caching a wide dataset without reuse
+narrow = raw_df.select("customer_id", "event_date", "amount")
+aggregated = narrow.groupBy("customer_id").sum("amount")
+
+# After consuming a deliberately persisted intermediate:
+if "reused_df" in locals():
+    reused_df.unpersist()
+```
+
+## 18. Executor bottleneck
+
+Executor CPU/memory/disk/network are best diagnosed through Spark UI, event logs and cluster metrics.
+
+```python
+# Capture plan and task-level context for the exact slow operation
+problem_df.explain("formatted")
+
+# Useful first-pass metrics from the Spark UI:
+# - task duration quantiles; shuffle read/write; spill; GC time
+# - executor lost/OOM events; input bytes; remote vs local shuffle
+# Avoid interpreting cluster-average CPU as the whole story.
+```
+
+## 19. Uneven partitions
+
+Partitioning by a key can help downstream keyed operations, but a hot key can remain skewed.
+
+```python
+partitioned = df.repartition(300, "account_id")
+print("partition count:", partitioned.rdd.getNumPartitions())
+
+# Compare task sizes/durations in Spark UI after the next wide stage
+partitioned.groupBy("account_id").agg({"amount": "sum"}).explain("formatted")
+```
+
+## 20. Task imbalance
+
+Look at per-task bytes, records, spill, host and duration; use speculation only for true stragglers.
+
+```python
+from pyspark.sql import functions as F
+
+# A simple data-skew diagnostic before a join or aggregation
+df.groupBy("join_key").count() \
+  .orderBy(F.desc("count")) \
+  .show(25, truncate=False)
+
+# Compare these key counts with the slow task distribution in Spark UI.
+```
+
+## 21. Slow file reads
+
+Choose a columnar layout, appropriate file sizes and useful scan parallelism for the access pattern.
+
+```python
+from pyspark.sql import functions as F
+
+scanned = (
+    spark.read.format("parquet").load("/lake/events/")
+    .select("event_date", "customer_id", "amount")
+    .where(F.col("event_date") >= F.lit("2026-10-01"))
+)
+scanned.explain("formatted")
+```
+
+## 22. Full dataset scan
+
+The query plan and scan metrics should confirm that partition pruning or data skipping really occurred.
+
+```python
+# Keep filters type-compatible and avoid applying functions to the partition column
+daily = spark.read.table("analytics.fact_events").where(
+    (F.col("event_date") >= F.lit("2026-10-01")) &
+    (F.col("event_date") < F.lit("2026-10-02"))
+)
+daily.select("customer_id", "amount").explain("formatted")
+```
+
+## 23. Metadata overhead
+
+Use a governed schema and reduce file/partition explosion; never delete table-managed files manually.
+
+```python
+from pyspark.sql.types import StructType, StructField, StringType, TimestampType, DoubleType
+
+event_schema = StructType([
+    StructField("event_id", StringType(), False),
+    StructField("event_ts", TimestampType(), True),
+    StructField("amount", DoubleType(), True)
+])
+events = spark.read.schema(event_schema).json("/landing/events/")
+```
+
+## 24. Tiny Delta files
+
+Databricks/Delta-specific example. Confirm feature availability, streaming interaction and maintenance policies.
+
+```sql
+# Databricks SQL / Delta Lake
+OPTIMIZE analytics.streaming_events;
+
+-- When justified by common filters and supported by the platform:
+OPTIMIZE analytics.streaming_events
+ZORDER BY (event_date, customer_id);
+```
+
+## 25. Slow filtering
+
+Use native predicates and verify that the filter reduces scan bytes or downstream shuffle.
+
+```python
+from pyspark.sql import functions as F
+
+filtered = df.where(
+    F.col("amount").isNotNull() &
+    (F.col("amount") > F.lit(0))
+).select("customer_id", "amount")
+
+filtered.explain("formatted")
+```
+
+## 26. Frequent writes
+
+Batch only within freshness requirements; tune file counts and make retries safe for the target sink.
+
+```python
+# Batch write example; table mode must reflect the data contract
+(
+    prepared_df
+    .repartition(64, "event_date")
+    .write.format("delta")
+    .mode("append")
+    .saveAsTable("analytics.events")
+)
+# Validate output file sizes and duplicate/replay behavior after tuning.
+```
+
+## 27. Slow aggregations
+
+Reduce rows before aggregation and avoid unbounded collection aggregations.
+
+```python
+from pyspark.sql import functions as F
+
+daily_metrics = (
+    events.filter(F.col("event_date") >= "2026-10-01")
+    .groupBy("event_date", "region")
+    .agg(
+        F.count("*").alias("event_count"),
+        F.sum("amount").alias("amount_sum"),
+        F.avg("amount").alias("amount_avg")
+    )
+)
+```
+
+## 28. Network overhead
+
+Inspect shuffle read/write metrics after reducing rows and columns before wide operations.
+
+```python
+from pyspark.sql import functions as F
+
+reduced = (
+    events.where(F.col("event_date") >= "2026-10-01")
+    .select("customer_id", "amount")
+)
+result = reduced.groupBy("customer_id").agg(F.sum("amount").alias("total"))
+result.explain("formatted")
+```
+
+## 29. Long lineage
+
+Checkpointing is useful when truncating lineage is worth the write/read cost; configure a durable checkpoint directory.
+
+```python
+spark.sparkContext.setCheckpointDir("abfss://checkpoints@storage.dfs.core.windows.net/spark")
+
+stage = expensive_transform(source_df)
+checkpointed = stage.checkpoint(eager=True)
+# Continue transformations from checkpointed; ensure lifecycle and retention are managed.
+```
+
+## 30. Recursive DAG growth
+
+For iterative algorithms, checkpoint/persist the iteration state and unpersist obsolete generations.
+
+```python
+current = initial_df
+
+for iteration in range(max_iterations):
+    next_df = update_iteration(current)
+    next_df = next_df.checkpoint(eager=True)  # checkpoint directory must be configured
+    current.unpersist(blocking=False) if hasattr(current, "unpersist") else None
+    current = next_df
+# In production, add convergence checks and clean up persisted intermediates deliberately.
+```
+
+## 31. Expensive sorting
+
+Use global ordering only when the contract requires a globally ordered result.
+
+```python
+# Partition-local ordering avoids promising a global row order
+sorted_partitions = df.repartition("region").sortWithinPartitions("event_ts")
+
+# Top-N use case: push limit/order into the query rather than sorting all rows downstream
+top_customers = df.orderBy(F.desc("revenue")).limit(100)
+```
+
+## 32. Hot partitions
+
+This is a simplified salted aggregation pattern; choose salt count from measured skew and merge partial results safely.
+
+```python
+from pyspark.sql import functions as F
+
+salted = df.withColumn("salt", F.pmod(F.xxhash64("event_id"), F.lit(16)))
+partial = salted.groupBy("customer_id", "salt").agg(F.sum("amount").alias("partial_sum"))
+final = partial.groupBy("customer_id").agg(F.sum("partial_sum").alias("total_amount"))
+```
+
+## 33. Nested JSON processing
+
+Parse with an explicit schema, select only needed fields and quarantine malformed payloads using a governed policy.
+
+```python
+from pyspark.sql.types import StructType, StructField, StringType, DoubleType
+from pyspark.sql import functions as F
+
+payload_schema = StructType([
+    StructField("event_type", StringType(), True),
+    StructField("customer", StructType([
+        StructField("id", StringType(), True)
+    ]), True),
+    StructField("amount", DoubleType(), True)
+])
+parsed = raw_json.select(F.from_json("payload", payload_schema).alias("p"))
+curated = parsed.select("p.event_type", "p.customer.id", "p.amount")
+```
+
+## 34. Schema inference cost
+
+Explicit schemas make production ingestion more predictable; schema evolution should be reviewed and governed.
+
+```python
+from pyspark.sql.types import StructType, StructField, StringType, LongType
+
+schema = StructType([
+    StructField("event_id", StringType(), False),
+    StructField("customer_id", StringType(), True),
+    StructField("event_epoch_ms", LongType(), True)
+])
+source = spark.read.schema(schema).json("/landing/event_json/")
+```
+
+## 35. Executor OOM
+
+The snippet shows safer narrowing before a join; diagnose driver vs executor vs container memory before changing sizing.
+
+```python
+from pyspark.sql.functions import broadcast
+
+# Reduce the footprint before joining; broadcast only if lookup is measured to be small
+fact_slim = fact.select("key", "event_date", "metric")
+dim_slim = dim.select("key", "category")
+joined = fact_slim.join(dim_slim, "key", "left")
+joined.explain("formatted")
+# Inspect executor OOM, GC, spill, skew and broadcast metrics in the Spark UI.
+```
+
+## 36. CPU bottleneck
+
+Prefer native expressions for common string/date/conditional work, and profile the exact expensive operator.
+
+```python
+from pyspark.sql import functions as F
+
+optimized = df.withColumn(
+    "normalized_code",
+    F.upper(F.trim(F.col("raw_code")))
+).withColumn(
+    "is_valid",
+    F.col("raw_code").isNotNull() & (F.length("raw_code") > 0)
+)
+```
+
+## 37. Slow writes
+
+Output partitions, file size and sink throughput should be tuned together; extra writers can overwhelm the sink.
+
+```python
+# Example only: tune 64 using observed bytes/task, file counts and sink capacity
+(
+    output_df.repartition(64)
+    .write.format("parquet")
+    .mode("overwrite")
+    .save("/curated/output/")
+)
+```
+
+## 38. Large output files
+
+Increase useful write parallelism or use platform file-size controls; don't split data blindly if the sink is already saturated.
+
+```python
+# Avoid collapsing a large dataset into a small number of writers
+target_df = large_df.repartition(256)
+target_df.write.mode("overwrite").parquet("/curated/parallel_output/")
+
+# Inspect resulting file-size distribution before choosing a different partition count.
+```
+
+## 39. Multiple actions
+
+Combine independent metrics in a single aggregate where possible, instead of rescanning the lineage for each action.
+
+```python
+from pyspark.sql import functions as F
+
+# One action computes several metrics from the same scan
+metrics = df.agg(
+    F.count("*").alias("row_count"),
+    F.countDistinct("customer_id").alias("distinct_customers"),
+    F.sum("amount").alias("amount_sum"),
+    F.sum(F.col("amount").isNull().cast("int")).alias("null_amounts")
+)
+metrics.show()
+```
+
+## 40. Frequent job failures
+
+Retries must be bounded and writes idempotent. For streaming, make foreachBatch logic safe for replay.
+
+```python
+def process_batch(batch_df, batch_id):
+    # Use a stable key/merge or another idempotent sink strategy.
+    # batch_id can support audit tracking, but do not assume it alone makes writes idempotent.
+    deduped = batch_df.dropDuplicates(["event_id"])
+    deduped.write.format("delta").mode("append").saveAsTable("analytics.events_stage")
+
+# stream.writeStream.foreachBatch(process_batch).option("checkpointLocation", checkpoint_path).start()
+```
+
+## 41. Slow streaming
+
+Monitor input/processing rates, batch duration, source lag and sink commit time before increasing compute.
+
+```python
+query = (
+    streaming_df.writeStream
+    .format("delta")
+    .outputMode("append")
+    .option("checkpointLocation", checkpoint_path)
+    .trigger(processingTime="1 minute")
+    .toTable("analytics.live_events")
+)
+# In operations, inspect query.lastProgress / recentProgress and source backlog.
+```
+
+## 42. State store growth
+
+A watermark bounds event-time state only according to the operator's semantics and accepted-lateness contract.
+
+```python
+from pyspark.sql import functions as F
+
+windowed = (
+    stream_df.withWatermark("event_time", "30 minutes")
+    .groupBy(
+        F.window("event_time", "10 minutes"),
+        F.col("customer_id")
+    )
+    .agg(F.count("*").alias("event_count"))
+)
+# Validate that dropping data older than the watermark is acceptable to the business.
+```
+
+## 43. Slow Delta MERGE
+
+Databricks SQL/Delta example. Source must be deduplicated deterministically and target pruning must preserve matches.
+
+```sql
+-- Assume staged_changes has at most one deterministic change per customer_id
+MERGE INTO analytics.customer_target AS t
+USING staged_changes AS s
+ON t.customer_id = s.customer_id
+WHEN MATCHED AND s.operation = 'DELETE' THEN DELETE
+WHEN MATCHED THEN UPDATE SET *
+WHEN NOT MATCHED AND s.operation <> 'DELETE' THEN INSERT *;
+```
+
+## 44. CDC processing delay
+
+Rank changes deterministically per business key using source sequence/LSN, not an arbitrary timestamp if ordering can tie.
+
+```python
+from pyspark.sql import Window, functions as F
+
+w = Window.partitionBy("customer_id").orderBy(
+    F.col("source_lsn").desc(), F.col("change_ts").desc()
+)
+latest = (
+    cdc_df.withColumn("rn", F.row_number().over(w))
+    .filter(F.col("rn") == 1)
+    .drop("rn")
+)
+# Merge latest changes with explicit delete/tombstone and replay semantics.
+```
+
+## 45. High query latency
+
+Use explain plans and runtime query profile to verify which operators are slow; engine acceleration is not a substitute for reducing work.
+
+```python
+# Spark SQL/PySpark: inspect the chosen physical operators
+query_df = spark.sql("""
+    SELECT customer_id, SUM(amount) AS total_amount
+    FROM analytics.fact_events
+    WHERE event_date >= DATE '2026-10-01'
+    GROUP BY customer_id
+""")
+query_df.explain("formatted")
+# If using Databricks, compare query profile/Photon eligibility and end-to-end cost.
+```
+
+## 46. High cluster cost
+
+Track cost per successful run alongside SLA and correctness metrics. Exact billing attribution is platform-specific.
+
+```python
+# A lightweight run metric record; send this to your approved metrics/logging sink
+run_summary = {
+    "pipeline": "daily_customer_metrics",
+    "input_rows": input_df.count(),
+    "output_rows": output_df.count(),
+    "run_status": "success"
+}
+print(run_summary)
+# Join these measures to actual platform billing/cluster cost for cost-per-row or cost-per-run.
+```
+
+## 47. Resource wastage
+
+Autoscaling/dynamic-allocation settings are environment-specific; measure utilization and job lifecycle before changing them.
+
+```python
+# Example Spark settings to evaluate in a controlled environment
+spark.conf.set("spark.dynamicAllocation.enabled", "true")
+spark.conf.set("spark.dynamicAllocation.minExecutors", "2")
+spark.conf.set("spark.dynamicAllocation.maxExecutors", "20")
+# Check whether the cluster manager/runtime permits these settings and compare cost/SLOs.
+```
+
+## 48. Low cluster utilization
+
+More workers help only when enough useful tasks exist and the source/sink can scale.
+
+```python
+# Inspect available parallelism before scaling compute
+print("input partitions:", source_df.rdd.getNumPartitions())
+candidate = source_df.repartition(400, "customer_id")
+candidate.explain("formatted")
+# Compare stage throughput and cost at two cluster sizes using the same representative input.
+```
+
+## 49. Slow query diagnosis
+
+Automate plan/metrics capture for regressions and correlate with source volume and runtime/config changes.
+
+```python
+query_df.explain("formatted")
+
+# Minimal application-level context for a run log
+diagnostic = {
+    "run_id": run_id,
+    "input_version": input_version,
+    "spark_version": spark.version,
+    "input_partitions": source_df.rdd.getNumPartitions()
+}
+print(diagnostic)
+# Correlate with Spark UI/event logs: stage duration, task quantiles, shuffle, spill, GC and scan bytes.
+```
+
+## 50. Overall Spark performance
+
+Use the same representative workload for benchmarks and track correctness, latency, throughput and cost together.
+
+```python
+import time
+
+start = time.perf_counter()
+result = build_pipeline(source_df)
+row_count = result.count()  # action intentionally included in measurement
+elapsed_seconds = time.perf_counter() - start
+
+print({
+    "row_count": row_count,
+    "elapsed_seconds": round(elapsed_seconds, 2),
+    "rows_per_second": round(row_count / elapsed_seconds, 2) if elapsed_seconds else None
+})
+# Production benchmark records should also include input bytes, output bytes, retries and compute cost.
+```
