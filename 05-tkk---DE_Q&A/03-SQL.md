@@ -1,2913 +1,999 @@
-# SQL — Top 35 Practical & Programming Interview Questions
+# SQL Interview Masterbook — Lead / Staff / Principal Data Engineer
 
-> **Target:** Senior / Lead / Staff Data Engineer
-> **Goal:** 70+ LPA product-based companies
-> **Focus:** Practical SQL, analytical SQL, window functions, CTEs, joins, deduplication, time-series problems, data-quality problems, ETL/ELT problems, performance tuning and interview coding.
+> **Target:** Lead, Staff, Principal Data Engineer and Data Architect roles at product companies; calibrated for ₹70+ LPA interviews in India.
+> **Goal:** Demonstrate correctness, scalability, performance, reliability, and architectural judgment—not just syntax.
+> **Dataset:** All questions use one consistent e-commerce dataset. It deliberately includes one-to-many relationships, retries, late updates, refunds, status history, NULLs, and behavioral events.
+> **Dialect:** PostgreSQL-style SQL for core examples, with Snowflake and BigQuery notes. Verify actual syntax and plans on the target engine.
 >
-> **Dialect used:** Mostly ANSI/PostgreSQL-style SQL because it is easy to adapt. Where Snowflake-specific syntax is useful, it is called out explicitly.
->
-> **Important:** Do not memorize only the query. Memorize **how to think about the problem**.
+> These are representative high-value senior interview patterns, not a claim that a named company asked each question recently.
 
----
+## How to use
 
-# 0. SQL Interview Thinking Framework
+For every question: clarify the business definition, declare result grain, write the simplest correct SQL, test ties/NULLs/missing periods/duplicates, compare alternatives, then discuss scale and operations.
 
-When the interviewer gives you a SQL problem, think:
+| Dimension | Lead | Staff | Principal |
+|---|---|---|---|
+| SQL | Correct maintainable queries | Reusable patterns and standards | Organization-wide semantic contracts |
+| Performance | Reads plans and tunes | Diagnoses skew, concurrency, cost | Platform workload/storage strategy |
+| Reliability | Retries and data checks | Replay, backfill, recovery | SLOs, ownership, risk |
+| Leadership | Mentors engineers | Influences teams across domains | Aligns architecture with business strategy |
 
-```text
-1. What is the required output grain?
-          ↓
-2. What is the source grain?
-          ↓
-3. Which tables are required?
-          ↓
-4. What are the join keys?
-          ↓
-5. Can joins multiply rows?
-          ↓
-6. Filter before or after aggregation?
-          ↓
-7. Do I need GROUP BY?
-          ↓
-8. Do I need a window function?
-          ↓
-9. Do I need a CTE?
-          ↓
-10. How should NULLs behave?
-          ↓
-11. What happens with duplicates?
-          ↓
-12. What happens at large scale?
-          ↓
-13. Can I optimize the query?
-```
+# 1. The single e-commerce dataset
 
-The most important senior-level question is:
+## Scenario
 
-> **"What is the grain of the result?"**
+A multi-region e-commerce product supports customers, products, orders, line items, payment attempts, status transitions, and behavioral events. The warehouse powers revenue, retention, funnels, reconciliation, CDC, and operational monitoring.
 
-For example:
+## Table grain
 
-```text
-customer grain
-order grain
-order-item grain
-day grain
-customer-month grain
-```
+| Table | Grain | Key |
+|---|---|---|
+| customers | One current row per customer | customer_id |
+| products | One current row per product | product_id |
+| orders | One row per order | order_id |
+| order_items | One row per order line | order_item_id |
+| payments | One row per payment attempt/transaction | payment_id |
+| order_status_history | One row per status transition | status_event_id |
+| events | One row per tracked event | event_id |
+| customer_snapshot | One customer per extract date | customer_id + snapshot_date |
 
-Many SQL bugs are actually **grain errors**.
+An order with 3 item rows and 2 payment attempts can produce 6 rows in a raw join. Aggregate child facts to the intended grain before joining measures.
 
----
-
-# 1. Find the second-highest salary.
-
-## Table
-
-```text
-employee
---------
-employee_id
-employee_name
-salary
-department
-```
-
-## Solution 1 — `DENSE_RANK()`
+## PostgreSQL reference DDL
 
 ```sql
-SELECT employee_id,
-       employee_name,
-       salary
-FROM (
-    SELECT e.*,
-           DENSE_RANK() OVER (ORDER BY salary DESC) AS rnk
-    FROM employee e
-) x
-WHERE rnk = 2;
-```
+CREATE TABLE customers (
+  customer_id BIGINT PRIMARY KEY,
+  customer_name TEXT,
+  email TEXT,
+  country_code CHAR(2),
+  signup_ts TIMESTAMP,
+  created_at TIMESTAMP NOT NULL,
+  updated_at TIMESTAMP NOT NULL,
+  is_deleted BOOLEAN NOT NULL DEFAULT FALSE,
+  source_updated_at TIMESTAMP,
+  ingested_at TIMESTAMP NOT NULL
+);
 
-## Why `DENSE_RANK()`?
+CREATE TABLE products (
+  product_id BIGINT PRIMARY KEY,
+  product_name TEXT NOT NULL,
+  category TEXT,
+  brand TEXT,
+  list_price NUMERIC(12,2),
+  is_active BOOLEAN NOT NULL DEFAULT TRUE,
+  updated_at TIMESTAMP NOT NULL
+);
 
-Suppose salaries are:
+CREATE TABLE orders (
+  order_id BIGINT PRIMARY KEY,
+  customer_id BIGINT NOT NULL,
+  order_ts TIMESTAMP NOT NULL,
+  order_status TEXT NOT NULL,
+  currency_code CHAR(3) NOT NULL,
+  shipping_country CHAR(2),
+  discount_amount NUMERIC(12,2) DEFAULT 0,
+  tax_amount NUMERIC(12,2) DEFAULT 0,
+  shipping_amount NUMERIC(12,2) DEFAULT 0,
+  source_updated_at TIMESTAMP,
+  ingested_at TIMESTAMP NOT NULL
+);
 
-```text
-100000
-90000
-90000
-80000
-```
+CREATE TABLE order_items (
+  order_item_id BIGINT PRIMARY KEY,
+  order_id BIGINT NOT NULL,
+  product_id BIGINT NOT NULL,
+  quantity INTEGER NOT NULL,
+  unit_price NUMERIC(12,2) NOT NULL,
+  item_discount NUMERIC(12,2) DEFAULT 0,
+  item_status TEXT NOT NULL,
+  source_updated_at TIMESTAMP,
+  ingested_at TIMESTAMP NOT NULL
+);
 
-The result for rank:
+CREATE TABLE payments (
+  payment_id BIGINT PRIMARY KEY,
+  order_id BIGINT NOT NULL,
+  payment_attempt INTEGER NOT NULL,
+  payment_ts TIMESTAMP NOT NULL,
+  payment_status TEXT NOT NULL,
+  amount NUMERIC(12,2) NOT NULL,
+  payment_method TEXT,
+  source_updated_at TIMESTAMP,
+  ingested_at TIMESTAMP NOT NULL
+);
 
-```text
-100000 → 1
-90000  → 2
-90000  → 2
-80000  → 3
-```
+CREATE TABLE order_status_history (
+  status_event_id BIGINT PRIMARY KEY,
+  order_id BIGINT NOT NULL,
+  order_status TEXT NOT NULL,
+  status_ts TIMESTAMP NOT NULL,
+  source_updated_at TIMESTAMP,
+  ingested_at TIMESTAMP NOT NULL
+);
 
-So the second-highest **distinct** salary is returned correctly.
+CREATE TABLE events (
+  event_id BIGINT PRIMARY KEY,
+  customer_id BIGINT,
+  session_id TEXT,
+  event_name TEXT NOT NULL,
+  event_ts TIMESTAMP NOT NULL,
+  product_id BIGINT,
+  order_id BIGINT,
+  page_url TEXT,
+  event_properties JSONB,
+  source_updated_at TIMESTAMP,
+  ingested_at TIMESTAMP NOT NULL
+);
 
-PostgreSQL documents `dense_rank` as ranking peer groups without gaps, which is exactly what is needed for the "second distinct value" interpretation.
-
-## Alternative
-
-```sql
-SELECT MAX(salary) AS second_highest_salary
-FROM employee
-WHERE salary < (
-    SELECT MAX(salary)
-    FROM employee
+CREATE TABLE customer_snapshot (
+  customer_id BIGINT NOT NULL,
+  customer_name TEXT,
+  email TEXT,
+  country_code CHAR(2),
+  snapshot_date DATE NOT NULL,
+  source_updated_at TIMESTAMP,
+  ingested_at TIMESTAMP NOT NULL,
+  PRIMARY KEY (customer_id, snapshot_date)
 );
 ```
 
-## Follow-up
+This is a teaching model. Some analytical platforms treat declared constraints as informational rather than enforced. Validate data types, timestamp semantics, and constraint behavior on your engine.
 
-### Q: What if there is no second-highest salary?
+## Sample data
 
-The query returns `NULL`.
+### customers
 
-### Q: `RANK()` vs `DENSE_RANK()`?
+| customer_id | name | email | country | signup_ts |
+|---:|---|---|---|---|
+| 1 | Asha | asha@example.com | IN | 2025-01-02 09:00 |
+| 2 | Ben | ben@example.com | US | 2025-01-05 10:00 |
+| 3 | Chen | chen@example.com | SG | 2025-02-01 08:00 |
+| 4 | Diya | diya@example.com | IN | 2025-02-10 12:00 |
+| 5 | Eli | NULL | IN | 2025-03-01 11:00 |
 
-For:
+### orders
 
-```text
-100
-90
-90
-80
-```
+| order_id | customer_id | order_ts | status | currency |
+|---:|---:|---|---|---|
+| 101 | 1 | 2025-01-10 10:00 | COMPLETED | INR |
+| 102 | 1 | 2025-01-15 12:00 | COMPLETED | INR |
+| 103 | 2 | 2025-01-20 09:00 | CANCELLED | USD |
+| 104 | 2 | 2025-02-05 15:00 | COMPLETED | USD |
+| 105 | 3 | 2025-02-07 13:00 | COMPLETED | SGD |
+| 106 | 1 | 2025-03-01 17:00 | COMPLETED | INR |
+| 107 | 4 | 2025-03-03 08:00 | PENDING | INR |
+| 108 | 5 | 2025-03-05 19:00 | COMPLETED | INR |
 
-`RANK()`:
+### order_items
 
-```text
-1
-2
-2
-4
-```
+| item_id | order_id | product_id | qty | unit_price | discount | status |
+|---:|---:|---:|---:|---:|---:|---|
+| 1001 | 101 | 10 | 2 | 500 | 0 | FULFILLED |
+| 1002 | 101 | 11 | 1 | 200 | 0 | FULFILLED |
+| 1003 | 102 | 10 | 1 | 500 | 50 | FULFILLED |
+| 1004 | 102 | 12 | 2 | 300 | 0 | FULFILLED |
+| 1005 | 103 | 11 | 1 | 200 | 0 | CANCELLED |
+| 1006 | 104 | 10 | 1 | 500 | 0 | FULFILLED |
+| 1007 | 105 | 13 | 3 | 100 | 0 | FULFILLED |
+| 1008 | 106 | 12 | 1 | 300 | 0 | FULFILLED |
+| 1009 | 107 | 10 | 1 | 500 | 0 | PENDING |
+| 1010 | 108 | 11 | 2 | 200 | 0 | FULFILLED |
 
-`DENSE_RANK()`:
+### products
 
-```text
-1
-2
-2
-3
-```
+| product_id | name | category | brand | list_price |
+|---:|---|---|---|---:|
+| 10 | Keyboard | Accessories | KeyCo | 550 |
+| 11 | Mouse | Accessories | KeyCo | 220 |
+| 12 | Monitor | Displays | ViewMax | 300 |
+| 13 | Cable | Accessories | LinkPro | 100 |
 
----
+### payments
 
-# 2. Find the top 3 highest-paid employees in each department.
+| payment_id | order_id | attempt | payment_ts | status | amount |
+|---:|---:|---:|---|---|---:|
+| 5001 | 101 | 1 | 2025-01-10 10:01 | SUCCESS | 1200 |
+| 5002 | 102 | 1 | 2025-01-15 12:01 | FAILED | 950 |
+| 5003 | 102 | 2 | 2025-01-15 12:05 | SUCCESS | 950 |
+| 5004 | 103 | 1 | 2025-01-20 09:02 | REFUNDED | 200 |
+| 5005 | 104 | 1 | 2025-02-05 15:01 | SUCCESS | 500 |
+| 5006 | 105 | 1 | 2025-02-07 13:01 | SUCCESS | 300 |
+| 5007 | 106 | 1 | 2025-03-01 17:01 | SUCCESS | 300 |
+| 5008 | 108 | 1 | 2025-03-05 19:01 | SUCCESS | 400 |
 
-## Solution
+### events
 
-```sql
-SELECT employee_id,
-       employee_name,
-       department,
-       salary
-FROM (
-    SELECT e.*,
-           DENSE_RANK() OVER (
-               PARTITION BY department
-               ORDER BY salary DESC
-           ) AS rnk
-    FROM employee e
-) x
-WHERE rnk <= 3;
-```
+| event_id | customer_id | session_id | event_name | event_ts | product_id | order_id |
+|---:|---:|---|---|---|---:|---:|
+| 9001 | 1 | s1 | view_product | 2025-01-10 09:00 | 10 | NULL |
+| 9002 | 1 | s1 | add_to_cart | 2025-01-10 09:05 | 10 | NULL |
+| 9003 | 1 | s1 | purchase | 2025-01-10 10:00 | NULL | 101 |
+| 9004 | 1 | s2 | view_product | 2025-01-15 11:00 | 12 | NULL |
+| 9005 | 1 | s2 | purchase | 2025-01-15 12:00 | NULL | 102 |
+| 9006 | 2 | s3 | view_product | 2025-02-05 14:00 | 10 | NULL |
+| 9007 | 2 | s3 | purchase | 2025-02-05 15:00 | NULL | 104 |
+| 9008 | 3 | s4 | view_product | 2025-02-07 12:00 | 13 | NULL |
+| 9009 | 3 | s4 | purchase | 2025-02-07 13:00 | NULL | 105 |
+| 9010 | 1 | s5 | view_product | 2025-03-01 16:00 | 12 | NULL |
 
-## Why?
+## Metric definitions used here
 
-The interviewer is testing:
+- Completed order: `orders.order_status = 'COMPLETED'`.
+- Gross item value: `quantity * unit_price`.
+- Net item value: `quantity * unit_price - COALESCE(item_discount, 0)`.
+- Net merchandise value: eligible fulfilled item values.
+- Cash collected: successful payment amount; not automatically equal to revenue.
+- Order count: distinct orders at order grain.
+- Active customer: one or more qualifying events in the period.
+- Taxes, shipping, refunds, FX and order-level discount allocation are excluded unless explicitly stated.
 
-* Window functions.
-* Partitioning.
-* Ranking.
-* Top-N per group.
+GMV, booked revenue, recognized revenue, cash collected, net sales, and contribution margin are not synonyms. Clarify the metric contract before coding.
 
-Window functions calculate over related rows while preserving individual result rows.
+# 2. Foundations and query semantics
 
-## Follow-up
+## Q1. What is the grain of each table, and why does it matter?
 
-### Q: Return exactly 3 employees even if salary ties exist.
+**Answer:** customers is customer-grain; orders is order-grain; order_items is line-grain; payments is payment-attempt-grain; events is event-grain; status history is transition-grain.
 
-Use:
+An order with 3 lines and 2 payment attempts can create 6 rows in a raw join. Summing item values afterward doubles them.
 
-```sql
-ROW_NUMBER() OVER (
-    PARTITION BY department
-    ORDER BY salary DESC, employee_id
-)
-```
+**Best:** Declare output grain, profile join-key uniqueness, and aggregate one-to-many children to the desired grain before joining measures.
 
-Then:
+**Level signal:** Lead prevents the defect; Staff standardizes facts/tests; Principal establishes canonical metric contracts and ownership.
 
-```sql
-WHERE row_number <= 3
-```
+## Q2. Explain logical SQL processing order.
 
-### Key distinction
+Conceptually: FROM/JOIN → WHERE → GROUP BY → HAVING → SELECT → DISTINCT → ORDER BY → LIMIT. Window functions are evaluated after grouping/aggregation in the logical model; the optimizer may reorder physical execution. A WHERE clause generally cannot reference a window result: use a subquery/CTE or QUALIFY where supported.
 
-```text
-RANK / DENSE_RANK
-→ business ranking with ties
-
-ROW_NUMBER
-→ exactly N rows
-```
-
----
-
-# 3. Remove duplicate records and retain the latest record.
-
-## Table
-
-```text
-customer
---------
-customer_id
-name
-email
-updated_at
-```
-
-## Solution
+## Q3. Find completed orders for customers in India.
 
 ```sql
-SELECT customer_id,
-       name,
-       email,
-       updated_at
-FROM (
-    SELECT c.*,
-           ROW_NUMBER() OVER (
-               PARTITION BY customer_id
-               ORDER BY updated_at DESC
-           ) AS rn
-    FROM customer c
-) x
-WHERE rn = 1;
-```
-
-## Logic
-
-```text
-customer_id
-     ↓
-partition records
-     ↓
-latest first
-     ↓
-row_number = 1
-```
-
-## Production consideration
-
-What if timestamps are identical?
-
-Use a deterministic tie-breaker:
-
-```sql
-ROW_NUMBER() OVER (
-    PARTITION BY customer_id
-    ORDER BY updated_at DESC,
-             ingestion_id DESC
-)
-```
-
-## Follow-up
-
-### Q: How would you physically delete duplicates?
-
-For example:
-
-```sql
-DELETE FROM customer
-WHERE ...
-```
-
-But in production I would first identify duplicates in a CTE/staging query and validate the exact rows to be deleted.
-
----
-
-# 4. Find employees whose salary is greater than their department average.
-
-## Solution
-
-```sql
-SELECT employee_id,
-       employee_name,
-       department,
-       salary
-FROM (
-    SELECT e.*,
-           AVG(salary) OVER (
-               PARTITION BY department
-           ) AS dept_avg_salary
-    FROM employee e
-) x
-WHERE salary > dept_avg_salary;
-```
-
-## Why window function?
-
-A normal:
-
-```sql
-GROUP BY department
-```
-
-would collapse employees into one row per department.
-
-A window function keeps the original employee rows while adding the department-level calculation.
-
-## Follow-up
-
-### Q: What if the company wants employees earning at least 20% above department average?
-
-```sql
-WHERE salary > dept_avg_salary * 1.20
-```
-
----
-
-# 5. Find customers who have never placed an order.
-
-## Tables
-
-```text
-customer
---------
-customer_id
-
-orders
-------
-order_id
-customer_id
-```
-
-## Preferred solution
-
-```sql
-SELECT c.customer_id
-FROM customer c
-LEFT JOIN orders o
-    ON c.customer_id = o.customer_id
-WHERE o.customer_id IS NULL;
-```
-
-## Alternative
-
-```sql
-SELECT customer_id
-FROM customer
-WHERE customer_id NOT IN (
-    SELECT customer_id
-    FROM orders
-    WHERE customer_id IS NOT NULL
-);
-```
-
-## Better interview discussion
-
-I generally prefer `NOT EXISTS` for anti-join logic because it avoids some NULL-related pitfalls of `NOT IN`.
-
-```sql
-SELECT c.customer_id
-FROM customer c
-WHERE NOT EXISTS (
-    SELECT 1
-    FROM orders o
-    WHERE o.customer_id = c.customer_id
-);
-```
-
-## Follow-up
-
-### Q: Why can `NOT IN` behave unexpectedly with NULL?
-
-SQL uses three-valued logic:
-
-```text
-TRUE
-FALSE
-UNKNOWN
-```
-
-A NULL comparison can result in `UNKNOWN`, affecting filtering behavior.
-
----
-
-# 6. Find duplicate emails.
-
-## Solution
-
-```sql
-SELECT email,
-       COUNT(*) AS cnt
-FROM customer
-GROUP BY email
-HAVING COUNT(*) > 1;
-```
-
-## Find the complete duplicate rows
-
-```sql
-SELECT *
-FROM customer
-WHERE email IN (
-    SELECT email
-    FROM customer
-    GROUP BY email
-    HAVING COUNT(*) > 1
-);
-```
-
-## Better scalable pattern
-
-```sql
-SELECT *
-FROM (
-    SELECT c.*,
-           COUNT(*) OVER (
-               PARTITION BY email
-           ) AS email_count
-    FROM customer c
-) x
-WHERE email_count > 1;
-```
-
-## Follow-up
-
-### Q: What if email should be case-insensitive?
-
-Normalize:
-
-```sql
-LOWER(TRIM(email))
-```
-
-For example:
-
-```sql
-PARTITION BY LOWER(TRIM(email))
-```
-
----
-
-# 7. Calculate running total of sales.
-
-## Table
-
-```text
-sales
------
-sale_date
-amount
-```
-
-## Solution
-
-```sql
-SELECT sale_date,
-       amount,
-       SUM(amount) OVER (
-           ORDER BY sale_date
-           ROWS BETWEEN UNBOUNDED PRECEDING
-                    AND CURRENT ROW
-       ) AS running_total
-FROM sales
-ORDER BY sale_date;
-```
-
-## Output concept
-
-```text
-Date       Amount     Running Total
-
-Jan 1       100          100
-Jan 2       200          300
-Jan 3       150          450
-```
-
-## Follow-up
-
-### Q: Running total per customer?
-
-```sql
-SUM(amount) OVER (
-    PARTITION BY customer_id
-    ORDER BY sale_date
-    ROWS BETWEEN UNBOUNDED PRECEDING
-             AND CURRENT ROW
-)
-```
-
----
-
-# 8. Calculate a 7-day rolling average.
-
-## Solution
-
-```sql
-SELECT sale_date,
-       amount,
-       AVG(amount) OVER (
-           ORDER BY sale_date
-           ROWS BETWEEN 6 PRECEDING AND CURRENT ROW
-       ) AS rolling_7_day_avg
-FROM daily_sales;
-```
-
-## Important interview trap
-
-`ROWS BETWEEN 6 PRECEDING` means **7 rows**, not necessarily **7 calendar days**.
-
-If dates have gaps:
-
-```text
-Oct 1
-Oct 2
-Oct 5
-Oct 10
-```
-
-then 7 rows ≠ 7 calendar days.
-
-## Senior answer
-
-> "Before writing the query, I would clarify whether the business means the previous seven records or the previous seven calendar days."
-
-That distinction is exactly the kind of detail senior interviewers look for.
-
-Window frames are part of standard window-function semantics; PostgreSQL and Snowflake document `ORDER BY` and window-frame behavior explicitly.
-
----
-
-# 9. Find the highest-selling product each month.
-
-## Table
-
-```text
-sales
------
-product_id
-sale_date
-amount
-```
-
-## Step 1 — Aggregate
-
-```sql
-WITH monthly_sales AS (
-    SELECT
-        DATE_TRUNC('month', sale_date) AS month,
-        product_id,
-        SUM(amount) AS total_sales
-    FROM sales
-    GROUP BY
-        DATE_TRUNC('month', sale_date),
-        product_id
-)
-```
-
-## Step 2 — Rank
-
-```sql
-SELECT month,
-       product_id,
-       total_sales
-FROM (
-    SELECT ms.*,
-           RANK() OVER (
-               PARTITION BY month
-               ORDER BY total_sales DESC
-           ) AS rnk
-    FROM monthly_sales ms
-) x
-WHERE rnk = 1;
-```
-
-## Thinking pattern
-
-```text
-Raw data
-   ↓
-Aggregate to month + product
-   ↓
-Rank within month
-   ↓
-Take rank 1
-```
-
-This **aggregate → rank** pattern is extremely important.
-
----
-
-# 10. Find employees who earn more than their manager.
-
-## Table
-
-```text
-employee
---------
-employee_id
-employee_name
-manager_id
-salary
-```
-
-## Solution
-
-```sql
-SELECT
-    e.employee_id,
-    e.employee_name,
-    e.salary,
-    m.employee_name AS manager_name,
-    m.salary AS manager_salary
-FROM employee e
-JOIN employee m
-    ON e.manager_id = m.employee_id
-WHERE e.salary > m.salary;
-```
-
-## Why?
-
-This is a **self join**.
-
-```text
-employee
-   ↙     ↘
-employee employee
-  employee      manager
-```
-
-## Follow-up
-
-### Q: How would you find employees without managers?
-
-```sql
-WHERE manager_id IS NULL
-```
-
-### Q: How would you find the highest paid employee under each manager?
-
-Use:
-
-```text
-self join
-+
-ROW_NUMBER / RANK
-```
-
----
-
-# 11. Find consecutive login days.
-
-## Table
-
-```text
-login
------
-user_id
-login_date
-```
-
-This is a classic **gaps-and-islands** problem.
-
-## Step 1 — Number rows
-
-```sql
-WITH x AS (
-    SELECT
-        user_id,
-        login_date,
-        login_date
-          - ROW_NUMBER() OVER (
-                PARTITION BY user_id
-                ORDER BY login_date
-            ) * INTERVAL '1 day' AS grp
-    FROM login
-)
-```
-
-## Step 2 — Group
-
-```sql
-SELECT
-    user_id,
-    MIN(login_date) AS start_date,
-    MAX(login_date) AS end_date,
-    COUNT(*) AS consecutive_days
-FROM x
-GROUP BY user_id, grp;
-```
-
-## Find users with at least 5 consecutive days
-
-```sql
-WITH x AS (
-    SELECT
-        user_id,
-        login_date,
-        login_date
-          - ROW_NUMBER() OVER (
-                PARTITION BY user_id
-                ORDER BY login_date
-            ) * INTERVAL '1 day' AS grp
-    FROM login
-)
-SELECT user_id
-FROM x
-GROUP BY user_id, grp
-HAVING COUNT(*) >= 5;
-```
-
-## Pattern to memorize
-
-```text
-ordered rows
-    ↓
-ROW_NUMBER()
-    ↓
-create grouping key
-    ↓
-GROUP BY
-    ↓
-islands
-```
-
----
-
-# 12. Find customers who purchased in January but not February.
-
-## Solution
-
-```sql
-SELECT DISTINCT customer_id
-FROM orders
-WHERE EXTRACT(MONTH FROM order_date) = 1
-
-EXCEPT
-
-SELECT DISTINCT customer_id
-FROM orders
-WHERE EXTRACT(MONTH FROM order_date) = 2;
-```
-
-## Alternative — conditional aggregation
-
-```sql
-SELECT customer_id
-FROM orders
-GROUP BY customer_id
-HAVING
-    SUM(
-        CASE WHEN EXTRACT(MONTH FROM order_date) = 1
-             THEN 1 ELSE 0 END
-    ) > 0
-AND
-    SUM(
-        CASE WHEN EXTRACT(MONTH FROM order_date) = 2
-             THEN 1 ELSE 0 END
-    ) = 0;
-```
-
-## Senior point
-
-The second approach makes the business logic explicit and can be generalized to many month-based conditions.
-
----
-
-# 13. Calculate month-over-month revenue growth.
-
-## Query
-
-```sql
-WITH monthly AS (
-    SELECT
-        DATE_TRUNC('month', order_date) AS month,
-        SUM(amount) AS revenue
-    FROM orders
-    GROUP BY DATE_TRUNC('month', order_date)
-),
-x AS (
-    SELECT
-        month,
-        revenue,
-        LAG(revenue) OVER (
-            ORDER BY month
-        ) AS previous_revenue
-    FROM monthly
-)
-SELECT
-    month,
-    revenue,
-    previous_revenue,
-    ROUND(
-        100.0 * (revenue - previous_revenue)
-        / NULLIF(previous_revenue, 0),
-        2
-    ) AS growth_pct
-FROM x;
-```
-
-## Important
-
-Use:
-
-```sql
-NULLIF(previous_revenue, 0)
-```
-
-to avoid division by zero.
-
-## Follow-up
-
-### Q: What if the previous month's revenue is NULL?
-
-The growth result should typically remain NULL unless the business defines a special rule.
-
----
-
-# 14. Find the first order for every customer.
-
-## Solution
-
-```sql
-SELECT customer_id,
-       order_id,
-       order_date
-FROM (
-    SELECT
-        o.*,
-        ROW_NUMBER() OVER (
-            PARTITION BY customer_id
-            ORDER BY order_date, order_id
-        ) AS rn
-    FROM orders o
-) x
-WHERE rn = 1;
-```
-
-## Alternative
-
-```sql
-SELECT
-    customer_id,
-    MIN(order_date) AS first_order_date
-FROM orders
-GROUP BY customer_id;
-```
-
-## Key difference
-
-`MIN()` only gives the date.
-
-`ROW_NUMBER()` lets you retrieve the **entire corresponding row**.
-
----
-
-# 15. Find the second order for every customer.
-
-## Solution
-
-```sql
-SELECT customer_id,
-       order_id,
-       order_date
-FROM (
-    SELECT
-        o.*,
-        ROW_NUMBER() OVER (
-            PARTITION BY customer_id
-            ORDER BY order_date, order_id
-        ) AS rn
-    FROM orders o
-) x
-WHERE rn = 2;
-```
-
-## Follow-up
-
-### Find customers whose second order happened within 30 days of the first.
-
-```sql
-WITH ranked AS (
-    SELECT
-        customer_id,
-        order_id,
-        order_date,
-        ROW_NUMBER() OVER (
-            PARTITION BY customer_id
-            ORDER BY order_date, order_id
-        ) AS rn
-    FROM orders
-),
-orders_1_2 AS (
-    SELECT
-        customer_id,
-        MAX(CASE WHEN rn = 1 THEN order_date END) AS first_order,
-        MAX(CASE WHEN rn = 2 THEN order_date END) AS second_order
-    FROM ranked
-    GROUP BY customer_id
-)
-SELECT *
-FROM orders_1_2
-WHERE second_order <= first_order + INTERVAL '30 days';
-```
-
----
-
-# 16. Find overlapping date ranges.
-
-## Table
-
-```text
-employee_project
-----------------
-employee_id
-start_date
-end_date
-```
-
-## Two records overlap when:
-
-```text
-range1.start <= range2.end
-AND
-range2.start <= range1.end
-```
-
-## Query
-
-```sql
-SELECT
-    a.employee_id,
-    a.start_date AS a_start,
-    a.end_date   AS a_end,
-    b.start_date AS b_start,
-    b.end_date   AS b_end
-FROM employee_project a
-JOIN employee_project b
-    ON a.employee_id = b.employee_id
-   AND a.start_date <= b.end_date
-   AND b.start_date <= a.end_date
-   AND a.start_date < b.start_date;
-```
-
-## Why the last condition?
-
-Without it:
-
-```text
-A joins B
-B joins A
-```
-
-creating duplicate mirror pairs.
-
----
-
-# 17. Find customers with purchases on three consecutive days.
-
-## Solution
-
-```sql
-WITH x AS (
-    SELECT DISTINCT
-        customer_id,
-        order_date
-    FROM orders
-),
-r AS (
-    SELECT
-        customer_id,
-        order_date,
-        LAG(order_date, 1) OVER (
-            PARTITION BY customer_id
-            ORDER BY order_date
-        ) AS prev_date,
-        LAG(order_date, 2) OVER (
-            PARTITION BY customer_id
-            ORDER BY order_date
-        ) AS prev_2_date
-    FROM x
-)
-SELECT DISTINCT customer_id
-FROM r
-WHERE order_date = prev_date + INTERVAL '1 day'
-  AND prev_date = prev_2_date + INTERVAL '1 day';
-```
-
-## Why `DISTINCT` first?
-
-If a customer has multiple orders on the same day, duplicate dates could invalidate the consecutive-day logic.
-
-## Senior point
-
-Always ask:
-
-> "Can there be multiple records per business day?"
-
----
-
-# 18. Calculate customer retention.
-
-Suppose:
-
-```text
-signup_date
-activity_date
-customer_id
-```
-
-We want:
-
-> Percentage of customers active in month N who are active again in month N+1.
-
-## Step 1 — Monthly activity
-
-```sql
-WITH activity AS (
-    SELECT DISTINCT
-        customer_id,
-        DATE_TRUNC('month', activity_date) AS month
-    FROM customer_activity
-)
-```
-
-## Step 2 — Match next month
-
-```sql
-SELECT
-    a.month,
-    COUNT(DISTINCT a.customer_id) AS active_customers,
-    COUNT(DISTINCT b.customer_id) AS retained_customers,
-    100.0 * COUNT(DISTINCT b.customer_id)
-        / NULLIF(COUNT(DISTINCT a.customer_id), 0)
-        AS retention_pct
-FROM activity a
-LEFT JOIN activity b
-    ON b.customer_id = a.customer_id
-   AND b.month = a.month + INTERVAL '1 month'
-GROUP BY a.month
-ORDER BY a.month;
-```
-
-## Interview discussion
-
-Clarify the definition:
-
-* User signed up and returned?
-* User purchased again?
-* User logged in?
-* User performed a meaningful action?
-
-Retention is a **business definition**, not merely a SQL problem.
-
----
-
-# 19. Calculate conversion through a funnel.
-
-Suppose events:
-
-```text
-user_id
-event_name
-event_time
-```
-
-Events:
-
-```text
-view_product
-add_to_cart
-checkout
-purchase
-```
-
-## Solution
-
-```sql
-SELECT
-    COUNT(DISTINCT CASE
-        WHEN event_name = 'view_product'
-        THEN user_id END
-    ) AS viewers,
-
-    COUNT(DISTINCT CASE
-        WHEN event_name = 'add_to_cart'
-        THEN user_id END
-    ) AS cart_users,
-
-    COUNT(DISTINCT CASE
-        WHEN event_name = 'checkout'
-        THEN user_id END
-    ) AS checkout_users,
-
-    COUNT(DISTINCT CASE
-        WHEN event_name = 'purchase'
-        THEN user_id END
-    ) AS purchasers
-FROM events;
-```
-
-## Conversion rates
-
-```sql
-100.0 * cart_users / NULLIF(viewers, 0)
-```
-
-etc.
-
-## Follow-up
-
-### Q: Why `COUNT(DISTINCT user_id)`?
-
-Because one user can generate multiple events.
-
----
-
-# 20. Find the longest period of inactivity for each customer.
-
-This tests:
-
-* `LAG`
-* Date arithmetic
-* Window functions
-* Aggregation
-
-## Solution
-
-```sql
-WITH x AS (
-    SELECT
-        customer_id,
-        order_date,
-        LAG(order_date) OVER (
-            PARTITION BY customer_id
-            ORDER BY order_date
-        ) AS previous_order_date
-    FROM orders
-),
-gaps AS (
-    SELECT
-        customer_id,
-        previous_order_date,
-        order_date,
-        order_date - previous_order_date AS gap_days
-    FROM x
-    WHERE previous_order_date IS NOT NULL
-)
-SELECT
-    customer_id,
-    MAX(gap_days) AS longest_gap_days
-FROM gaps
-GROUP BY customer_id;
-```
-
-## Follow-up
-
-### Q: What if you want the exact start/end orders?
-
-Return the row associated with the maximum gap using `ROW_NUMBER()` over:
-
-```sql
-ORDER BY gap_days DESC
-```
-
----
-
-# 21. Find the median salary.
-
-A common approach using a percentile function:
-
-```sql
-SELECT
-    PERCENTILE_CONT(0.5)
-    WITHIN GROUP (ORDER BY salary) AS median_salary
-FROM employee;
-```
-
-## Why median instead of average?
-
-Average:
-
-```text
-100
-100
-100
-10,000
-```
-
-is highly affected by the outlier.
-
-Median is more robust.
-
-## Follow-up
-
-### Q: What if the database doesn't support `PERCENTILE_CONT`?
-
-You can derive the middle row(s) using:
-
-```text
-ROW_NUMBER()
-COUNT() OVER ()
-```
-
-and average the middle values.
-
-## Important
-
-This is one place where SQL dialect support differs. Check the target database syntax before using it in production.
-
----
-
-# 22. Find the nth highest salary.
-
-## Solution
-
-```sql
-SELECT employee_id,
-       employee_name,
-       salary
-FROM (
-    SELECT
-        e.*,
-        DENSE_RANK() OVER (
-            ORDER BY salary DESC
-        ) AS rnk
-    FROM employee e
-) x
-WHERE rnk = 5;
-```
-
-For nth highest distinct salary:
-
-```text
-N = 5
-→ rnk = 5
-```
-
-## Follow-up
-
-### Q: What if interviewer wants exactly N rows?
-
-Use `ROW_NUMBER()`.
-
-### Q: What if ties should all be returned?
-
-Use `DENSE_RANK()`.
-
----
-
-# 23. Identify customers whose total spending is above the average customer spending.
-
-This is a **two-level aggregation** problem.
-
-## Step 1
-
-```sql
-WITH customer_spend AS (
-    SELECT
-        customer_id,
-        SUM(amount) AS total_spend
-    FROM orders
-    GROUP BY customer_id
-)
-```
-
-## Step 2
-
-```sql
-SELECT *
-FROM customer_spend
-WHERE total_spend > (
-    SELECT AVG(total_spend)
-    FROM customer_spend
-);
-```
-
-## Key insight
-
-You cannot directly do:
-
-```sql
-AVG(SUM(amount))
-```
-
-at the same grouping level.
-
-You first aggregate to:
-
-```text
-customer
-```
-
-then aggregate those customer totals:
-
-```text
-average customer spend
-```
-
-This is a very important SQL reasoning pattern.
-
----
-
-# 24. Find products that were never sold.
-
-## Solution
-
-```sql
-SELECT p.product_id,
-       p.product_name
-FROM product p
-LEFT JOIN order_item oi
-    ON p.product_id = oi.product_id
-WHERE oi.product_id IS NULL;
-```
-
-## Alternative
-
-```sql
-SELECT p.product_id,
-       p.product_name
-FROM product p
-WHERE NOT EXISTS (
-    SELECT 1
-    FROM order_item oi
-    WHERE oi.product_id = p.product_id
-);
-```
-
-## Interview discussion
-
-This is an **anti-join** problem.
-
-Remember:
-
-```text
-LEFT JOIN + NULL check
-```
-
-or:
-
-```text
-NOT EXISTS
-```
-
----
-
-# 25. Find duplicate rows after a join.
-
-This is extremely important in Data Engineering interviews.
-
-Suppose:
-
-```text
-customer
-1 → John
-
-order
-100 → customer 1
-101 → customer 1
-```
-
-If you expect one customer row but join:
-
-```sql
-customer
-JOIN orders
-```
-
-then:
-
-```text
-John
-John
-```
-
-is correct relationally.
-
-It is only a bug if the **expected output grain was customer-level**.
-
-## Senior answer
-
-Before using `DISTINCT`, ask:
-
-> "Why are multiple rows being generated?"
-
-## Debug query
-
-```sql
-SELECT
-    c.customer_id,
-    COUNT(*) AS joined_rows
-FROM customer c
-JOIN orders o
-    ON c.customer_id = o.customer_id
-GROUP BY c.customer_id
-HAVING COUNT(*) > 1;
-```
-
-## Key principle
-
-```text
-Unexpected duplicates
-        ↓
-Check join cardinality
-        ↓
-Check source grain
-        ↓
-Check many-to-many relationships
-```
-
-Do not blindly fix with:
-
-```sql
-SELECT DISTINCT
-```
-
----
-
-# 26. Solve a many-to-many join without multiplying measures.
-
-Suppose:
-
-```text
-orders
-------
-order_id
-customer_id
-amount
-
-order_tags
-----------
-order_id
-tag
-```
-
-One order can have many tags.
-
-This query:
-
-```sql
-SELECT
-    customer_id,
-    SUM(amount)
+SELECT o.order_id, o.customer_id, o.order_ts, o.currency_code
 FROM orders o
-JOIN order_tags t
-    ON o.order_id = t.order_id
-GROUP BY customer_id;
+JOIN customers c ON c.customer_id = o.customer_id
+WHERE o.order_status = 'COMPLETED'
+  AND c.country_code = 'IN';
 ```
 
-can double-count order amounts.
-
-## Why?
-
-Example:
-
-```text
-Order 100 = ₹1,000
-
-Tags:
-A
-B
-C
-```
-
-Join produces:
-
-```text
-100 1000 A
-100 1000 B
-100 1000 C
-```
-
-`SUM(amount)` = ₹3,000 ❌
-
-## Correct approach
-
-Aggregate the one-to-many side first:
+**Alternative:** EXISTS if only membership matters:
 
 ```sql
-WITH tags AS (
-    SELECT
-        order_id,
-        COUNT(*) AS tag_count
-    FROM order_tags
-    GROUP BY order_id
-)
-SELECT
-    o.customer_id,
-    SUM(o.amount)
+SELECT o.order_id, o.customer_id, o.order_ts, o.currency_code
 FROM orders o
-GROUP BY o.customer_id;
-```
-
-Or build separate measures at their proper grain.
-
-## Senior statement
-
-> "Every measure must be aggregated at the correct grain before crossing a one-to-many or many-to-many relationship."
-
-This is one of the most valuable SQL concepts for analytics engineering.
-
----
-
-# 27. Find records present in source but missing from target.
-
-This is directly relevant to your reconciliation/data-quality experience. Your resume explicitly includes file-to-table, table-to-table and cross-system reconciliation.
-
-## Solution
-
-```sql
-SELECT s.business_key
-FROM source_table s
-LEFT JOIN target_table t
-    ON s.business_key = t.business_key
-WHERE t.business_key IS NULL;
-```
-
-## Or
-
-```sql
-SELECT s.business_key
-FROM source_table s
-WHERE NOT EXISTS (
-    SELECT 1
-    FROM target_table t
-    WHERE t.business_key = s.business_key
-);
-```
-
-## Find target-only records
-
-Reverse the logic.
-
-```text
-Source - Target
-```
-
-and:
-
-```text
-Target - Source
-```
-
-## Stronger reconciliation
-
-Add aggregates:
-
-```sql
-SELECT
-    COUNT(*) AS row_count,
-    SUM(amount) AS total_amount,
-    MIN(event_date),
-    MAX(event_date)
-FROM source_table;
-```
-
-and compare with target.
-
----
-
-# 28. Compare source and target counts, sums and duplicates.
-
-A production reconciliation query might calculate:
-
-```sql
-SELECT
-    'SOURCE' AS system_name,
-    COUNT(*) AS row_count,
-    COUNT(DISTINCT business_key) AS distinct_keys,
-    SUM(amount) AS total_amount,
-    SUM(CASE WHEN business_key IS NULL THEN 1 ELSE 0 END) AS null_keys
-FROM source_table
-
-UNION ALL
-
-SELECT
-    'TARGET' AS system_name,
-    COUNT(*) AS row_count,
-    COUNT(DISTINCT business_key) AS distinct_keys,
-    SUM(amount) AS total_amount,
-    SUM(CASE WHEN business_key IS NULL THEN 1 ELSE 0 END) AS null_keys
-FROM target_table;
-```
-
-## Expected output
-
-```text
-SYSTEM    ROWS    DISTINCT_KEYS    TOTAL_AMOUNT    NULL_KEYS
-
-SOURCE    1M      1M               50M             0
-TARGET    1M      1M               50M             0
-```
-
-## Senior answer
-
-Do not rely only on:
-
-```text
-COUNT(*)
-```
-
-Two datasets can have identical counts but completely different records.
-
-Use progressive reconciliation:
-
-```text
-Count
- ↓
-Distinct keys
- ↓
-Aggregates
- ↓
-Key differences
- ↓
-Row-level/hash comparison
-```
-
----
-
-# 29. Find records whose value changed between source and target.
-
-Suppose:
-
-```text
-source
-------
-customer_id
-status
-amount
-```
-
-and target has the same fields.
-
-## Query
-
-```sql
-SELECT
-    s.customer_id,
-    s.status AS source_status,
-    t.status AS target_status,
-    s.amount AS source_amount,
-    t.amount AS target_amount
-FROM source s
-JOIN target t
-    ON s.customer_id = t.customer_id
-WHERE
-       s.status <> t.status
-    OR s.amount <> t.amount;
-```
-
-## Important NULL issue
-
-This fails to detect some differences involving NULL.
-
-Use explicit NULL-safe logic depending on the database.
-
-PostgreSQL, for example, supports:
-
-```sql
-s.amount IS DISTINCT FROM t.amount
-```
-
-Example:
-
-```sql
-WHERE s.status IS DISTINCT FROM t.status
-   OR s.amount IS DISTINCT FROM t.amount;
-```
-
-## Senior point
-
-When building reconciliation frameworks, NULL semantics must be deliberately defined.
-
----
-
-# 30. Write an SCD Type 2 SQL merge.
-
-Suppose target:
-
-```text
-customer_dim
-------------
-customer_sk
-customer_id
-city
-start_date
-end_date
-is_current
-```
-
-Source:
-
-```text
-customer_source
----------------
-customer_id
-city
-```
-
-## Concept
-
-```text
-Existing current record
-        ↓
-Compare attributes
-        ↓
-Changed?
-   /       \
- No         Yes
- ↓           ↓
-Nothing   expire old
-             ↓
-        insert new version
-```
-
-## Conceptual SQL
-
-```sql
--- 1. Expire changed current records
-
-UPDATE customer_dim d
-SET
-    end_date = CURRENT_DATE - INTERVAL '1 day',
-    is_current = FALSE
-FROM customer_source s
-WHERE d.customer_id = s.customer_id
-  AND d.is_current = TRUE
-  AND d.city IS DISTINCT FROM s.city;
-```
-
-Then insert the new/current version:
-
-```sql
-INSERT INTO customer_dim (
-    customer_sk,
-    customer_id,
-    city,
-    start_date,
-    end_date,
-    is_current
-)
-SELECT
-    next_surrogate_key,
-    s.customer_id,
-    s.city,
-    CURRENT_DATE,
-    DATE '9999-12-31',
-    TRUE
-FROM customer_source s
-LEFT JOIN customer_dim d
-    ON d.customer_id = s.customer_id
-   AND d.is_current = TRUE
-WHERE d.customer_id IS NULL
-   OR d.city IS DISTINCT FROM s.city;
-```
-
-## Important
-
-Exact implementation differs by database.
-
-Snowflake can simplify some patterns with `MERGE`, while an explicit two-step approach can make Type 2 behavior easier to reason about.
-
-## Follow-up
-
-### What if the same source record arrives twice?
-
-The pipeline must be idempotent and should not create unnecessary new versions.
-
----
-
-# 31. Find the latest record for every business key using `QUALIFY`.
-
-This is especially useful for Snowflake interviews.
-
-## Snowflake
-
-```sql
-SELECT *
-FROM customer
-QUALIFY ROW_NUMBER() OVER (
-    PARTITION BY customer_id
-    ORDER BY updated_at DESC
-) = 1;
-```
-
-Snowflake documents `QUALIFY` specifically as a way to filter after window functions are computed, which avoids nesting the window-function query in another subquery.
-
-## ANSI-style equivalent
-
-```sql
-SELECT *
-FROM (
-    SELECT *,
-           ROW_NUMBER() OVER (
-               PARTITION BY customer_id
-               ORDER BY updated_at DESC
-           ) AS rn
-    FROM customer
-) x
-WHERE rn = 1;
-```
-
-## Interview point
-
-Know both.
-
-If interviewing for Snowflake-heavy roles, `QUALIFY` is worth knowing extremely well.
-
----
-
-# 32. Find the first and last event for every user.
-
-## Solution
-
-```sql
-SELECT
-    user_id,
-    MIN(event_time) AS first_event,
-    MAX(event_time) AS last_event
-FROM user_events
-GROUP BY user_id;
-```
-
-## But what if we need the actual event rows?
-
-Use:
-
-```sql
-WITH ranked AS (
-    SELECT
-        e.*,
-        ROW_NUMBER() OVER (
-            PARTITION BY user_id
-            ORDER BY event_time
-        ) AS first_rn,
-        ROW_NUMBER() OVER (
-            PARTITION BY user_id
-            ORDER BY event_time DESC
-        ) AS last_rn
-    FROM user_events e
-)
-SELECT *
-FROM ranked
-WHERE first_rn = 1
-   OR last_rn = 1;
-```
-
-## Follow-up
-
-### What if timestamps tie?
-
-Use a deterministic event ID:
-
-```sql
-ORDER BY event_time, event_id
-```
-
----
-
-# 33. Sessionize user events.
-
-This is a high-value senior SQL problem.
-
-## Requirement
-
-Start a new session when the gap between two events is greater than 30 minutes.
-
-Input:
-
-```text
-user_id
-event_time
-```
-
-## Step 1 — Previous event
-
-```sql
-WITH x AS (
-    SELECT
-        user_id,
-        event_time,
-        LAG(event_time) OVER (
-            PARTITION BY user_id
-            ORDER BY event_time
-        ) AS previous_event
-    FROM events
-)
-```
-
-## Step 2 — Identify session starts
-
-```sql
-, flags AS (
-    SELECT
-        *,
-        CASE
-            WHEN previous_event IS NULL THEN 1
-            WHEN event_time - previous_event
-                 > INTERVAL '30 minutes'
-            THEN 1
-            ELSE 0
-        END AS new_session
-    FROM x
-)
-```
-
-## Step 3 — Cumulative session number
-
-```sql
-, sessions AS (
-    SELECT
-        *,
-        SUM(new_session) OVER (
-            PARTITION BY user_id
-            ORDER BY event_time
-            ROWS BETWEEN UNBOUNDED PRECEDING
-                     AND CURRENT ROW
-        ) AS session_id
-    FROM flags
-)
-SELECT *
-FROM sessions;
-```
-
-## Output
-
-```text
-user  event_time      session
-
-A     10:00           1
-A     10:05           1
-A     10:20           1
-A     11:10           2
-A     11:15           2
-```
-
-## Why this matters
-
-This tests:
-
-* `LAG`
-* `CASE`
-* Windowed `SUM`
-* Time arithmetic
-* Stateful thinking
-
-This is exactly the type of problem where an interviewer is evaluating whether you can translate a business rule into a sequence of SQL transformations.
-
----
-
-# 34. A query is suddenly running 20× slower. How do you debug it?
-
-This is not merely a syntax question.
-
-## Step 1 — Confirm the regression
-
-Compare:
-
-```text
-Before
-After
-```
-
-Look at:
-
-* Runtime.
-* Rows returned.
-* Data volume.
-* Execution plan.
-* Statistics.
-* Concurrent workload.
-
-## Step 2 — Inspect execution plan
-
-Use:
-
-```sql
-EXPLAIN
-SELECT ...;
-```
-
-For PostgreSQL:
-
-```sql
-EXPLAIN ANALYZE
-SELECT ...;
-```
-
-PostgreSQL's `EXPLAIN` shows the planner's chosen scan and join strategies, while `EXPLAIN ANALYZE` actually executes the query and exposes actual row counts and runtime for comparison with estimates.
-
-SQL Server similarly exposes estimated and actual execution plans, including runtime information in actual plans.
-
-## Look for
-
-```text
-Full table scan
-        ↓
-Wrong join strategy
-        ↓
-Huge row estimate mismatch
-        ↓
-Missing / ineffective index
-        ↓
-Large sort
-        ↓
-Large aggregation
-        ↓
-Bad cardinality
-        ↓
-Data skew
-```
-
-## Step 3 — Check statistics
-
-Query optimizers use table/data statistics when selecting plans. PostgreSQL's `ANALYZE` collects these statistics for the planner.
-
-## Step 4 — Check query changes
-
-Common regressions:
-
-```text
-new JOIN
-new OR condition
-function on filter column
-SELECT *
-new ORDER BY
-data distribution change
-statistics became stale
-```
-
-## Senior answer
-
-> "I would not optimize based on the SQL text alone. I would compare the execution plan, actual versus estimated cardinality, data distribution and recent schema/statistics/query changes."
-
----
-
-# 35. Optimize this query for a 5-billion-row fact table.
-
-Suppose:
-
-```sql
-SELECT *
-FROM sales
-WHERE DATE(order_timestamp) = '2026-10-01'
-  AND customer_id IN (
-      SELECT customer_id
-      FROM customers
-      WHERE country = 'IN'
+WHERE o.order_status = 'COMPLETED'
+  AND EXISTS (
+    SELECT 1 FROM customers c
+    WHERE c.customer_id = o.customer_id AND c.country_code = 'IN'
   );
 ```
 
-## Problems
+**Best:** Both are valid under unique customer keys. EXISTS avoids multiplying output if the customer input is unexpectedly non-unique. Clarify deleted customers and historical country as-of order time.
 
-### Problem 1
-
-```sql
-SELECT *
-```
-
-reads unnecessary columns.
-
-### Problem 2
+## Q4. WHERE vs HAVING?
 
 ```sql
-DATE(order_timestamp)
+SELECT o.customer_id,
+       SUM(oi.quantity * oi.unit_price - COALESCE(oi.item_discount, 0)) AS net_value
+FROM orders o
+JOIN order_items oi ON oi.order_id = o.order_id
+WHERE o.order_status = 'COMPLETED'
+  AND oi.item_status = 'FULFILLED'
+GROUP BY o.customer_id
+HAVING SUM(oi.quantity * oi.unit_price - COALESCE(oi.item_discount, 0)) > 1000;
 ```
 
-applies a function to the column.
+WHERE filters rows before aggregation; HAVING filters groups afterward. Put row eligibility in WHERE and aggregate thresholds in HAVING.
 
-Depending on database/physical design, this can prevent effective use of an index or pruning mechanism.
-
-### Problem 3
-
-A large `IN` subquery may not be the best expression for the optimizer/workload.
-
-## Better form
+## Q5. COUNT(*) vs COUNT(column) vs COUNT(DISTINCT column)?
 
 ```sql
-SELECT
-    s.order_id,
-    s.customer_id,
-    s.order_timestamp,
-    s.amount
-FROM sales s
-JOIN customers c
-    ON s.customer_id = c.customer_id
-WHERE c.country = 'IN'
-  AND s.order_timestamp >= TIMESTAMP '2026-10-01 00:00:00'
-  AND s.order_timestamp <  TIMESTAMP '2026-10-02 00:00:00';
+SELECT COUNT(*) AS row_count,
+       COUNT(email) AS non_null_emails,
+       COUNT(DISTINCT email) AS unique_non_null_emails
+FROM customers;
 ```
 
-## Why?
+COUNT(*) counts rows; COUNT(column) ignores NULL; COUNT(DISTINCT column) counts unique non-NULL values. Approximate distinct functions trade precision for compute; do not use for finance/contractual measures without an approved error bound.
 
-### 1. Avoid unnecessary columns
+## Q6. Why is NOT IN risky when the subquery can return NULL?
 
-```text
-SELECT *
-```
-
-→ potentially huge I/O.
-
-### 2. Use a range predicate
-
-Instead of:
+A NULL can make comparisons UNKNOWN under three-valued logic. Use a correlated anti-join:
 
 ```sql
-DATE(order_timestamp) = ...
+SELECT c.customer_id
+FROM customers c
+WHERE NOT EXISTS (
+  SELECT 1 FROM orders o WHERE o.customer_id = c.customer_id
+);
 ```
 
-use:
+LEFT JOIN ... IS NULL is also valid when checking a non-nullable match key. NOT IN can be safe if NULLs are excluded deliberately.
+
+## Q7. Find customers with no completed orders.
 
 ```sql
->= start
-AND < next_day
+SELECT c.customer_id, c.customer_name
+FROM customers c
+WHERE NOT EXISTS (
+  SELECT 1 FROM orders o
+  WHERE o.customer_id = c.customer_id
+    AND o.order_status = 'COMPLETED'
+);
 ```
 
-### 3. Push selective filtering early
+A customer with only cancelled/pending orders qualifies. That differs from having no orders at all.
 
-Country filter:
+## Q8. UNION vs UNION ALL?
 
-```text
-country = 'IN'
-```
+UNION removes duplicate result rows; UNION ALL preserves them. Prefer UNION ALL unless set semantics require deduplication. Duplicate removal can require sort/hash work and hide upstream defects.
 
-reduces the relevant customer set.
+## Q9. Explain CASE, COALESCE, NULLIF.
 
-### 4. Evaluate join strategy using the actual database
-
-Do not assume a rewrite is automatically faster.
-
-Inspect the execution plan.
-
-SQL Server's query optimizer considers table access order, access methods, joins, filtering and aggregation when choosing an execution plan.
-
-## Senior answer
-
-> "I would first understand table size, partitioning, indexes/clustering, data distribution and query frequency. Then I'd use the execution plan to verify whether the rewrite actually reduced scan, join or sort cost."
-
----
-
-# TOP SQL FOLLOW-UP QUESTIONS
-
-These can come immediately after the 35 questions above.
-
-## Window Functions
-
-```text
-ROW_NUMBER vs RANK vs DENSE_RANK?
-
-LAG vs LEAD?
-
-ROWS vs RANGE?
-
-PARTITION BY vs GROUP BY?
-
-Can aggregate functions be used as window functions?
-
-What is a window frame?
-
-How does NULL ordering affect ranking?
-```
-
-PostgreSQL and Snowflake both document window functions around the `OVER` clause, including partitioning, ordering and window-frame concepts.
-
----
-
-# JOIN QUESTIONS
-
-You should be able to explain:
-
-```text
-INNER JOIN
-LEFT JOIN
-RIGHT JOIN
-FULL OUTER JOIN
-CROSS JOIN
-SELF JOIN
-SEMI JOIN
-ANTI JOIN
-```
-
-And more importantly:
-
-```text
-1-to-1
-1-to-many
-many-to-1
-many-to-many
-```
-
-## Critical interview question
-
-> "Why did this join increase my row count from 10 million to 80 million?"
-
-Your answer should immediately be:
-
-> "I would check join cardinality and whether either side contains duplicate join keys."
-
----
-
-# NULL QUESTIONS
-
-Know all of these:
+CASE is conditional logic; COALESCE returns first non-NULL; NULLIF(a,b) returns NULL when equal. Example safe division:
 
 ```sql
-IS NULL
-IS NOT NULL
-COALESCE()
-NULLIF()
-CASE
+SELECT 100.0 / NULLIF(COUNT(*), 0)
+FROM orders WHERE order_status = 'COMPLETED';
 ```
 
-## Example
+Do not convert every NULL to zero; unknown, missing, and zero may differ.
+
+## Q10. Explain join types and semi/anti joins.
+
+INNER returns matches; LEFT preserves left rows; FULL preserves both; CROSS produces a Cartesian product; SELF joins a table to itself. Semi join returns left rows when a match exists (EXISTS); anti join returns left rows when none exists (NOT EXISTS). State expected 1:1/1:many/many:1/many:many cardinality before joining.
+
+# 3. Aggregation, revenue and product analytics
+
+## Q11. Calculate net merchandise value per order.
 
 ```sql
-SELECT
-    COALESCE(phone, 'UNKNOWN')
-FROM customer;
+SELECT o.order_id, o.currency_code,
+       SUM(oi.quantity * oi.unit_price - COALESCE(oi.item_discount, 0)) AS net_item_value
+FROM orders o
+JOIN order_items oi ON oi.order_id = o.order_id
+WHERE o.order_status = 'COMPLETED'
+  AND oi.item_status = 'FULFILLED'
+GROUP BY o.order_id, o.currency_code;
 ```
 
-## Division safety
+Aggregate from line grain to order grain. This excludes taxes, shipping, refunds, and order-level discounts; production metrics need a financial contract.
+
+## Q12. Calculate customer value by currency.
 
 ```sql
-revenue / NULLIF(order_count, 0)
+WITH order_value AS (
+  SELECT o.order_id, o.customer_id, o.currency_code,
+         SUM(oi.quantity * oi.unit_price - COALESCE(oi.item_discount, 0)) AS net_value
+  FROM orders o
+  JOIN order_items oi ON oi.order_id = o.order_id
+  WHERE o.order_status = 'COMPLETED'
+    AND oi.item_status = 'FULFILLED'
+  GROUP BY o.order_id, o.customer_id, o.currency_code
+)
+SELECT customer_id, currency_code, SUM(net_value) AS customer_value
+FROM order_value
+GROUP BY customer_id, currency_code;
 ```
 
----
+Keep currencies separate until a documented FX policy specifies source, rate date, and precision.
 
-# GROUP BY vs HAVING vs WHERE
-
-## WHERE
-
-Filters rows **before aggregation**.
+## Q13. Top 5 customers by spend per currency.
 
 ```sql
-WHERE country = 'IN'
+WITH customer_value AS (
+  SELECT o.customer_id, o.currency_code,
+         SUM(oi.quantity * oi.unit_price - COALESCE(oi.item_discount, 0)) AS net_value
+  FROM orders o JOIN order_items oi ON oi.order_id = o.order_id
+  WHERE o.order_status = 'COMPLETED' AND oi.item_status = 'FULFILLED'
+  GROUP BY o.customer_id, o.currency_code
+),
+ranked AS (
+  SELECT *, DENSE_RANK() OVER (
+    PARTITION BY currency_code ORDER BY net_value DESC
+  ) AS rnk
+  FROM customer_value
+)
+SELECT * FROM ranked WHERE rnk <= 5
+ORDER BY currency_code, rnk, customer_id;
 ```
 
-## GROUP BY
+DENSE_RANK includes ties; ROW_NUMBER gives at most five rows with deterministic secondary ordering. Clarify “five positions” vs “five ranks”.
 
-Creates groups.
+## Q14. Top product by units sold in each category.
 
 ```sql
-GROUP BY customer_id
+WITH product_units AS (
+  SELECT p.category, p.product_id, p.product_name, SUM(oi.quantity) AS units_sold
+  FROM order_items oi
+  JOIN orders o ON o.order_id = oi.order_id
+  JOIN products p ON p.product_id = oi.product_id
+  WHERE o.order_status = 'COMPLETED' AND oi.item_status = 'FULFILLED'
+  GROUP BY p.category, p.product_id, p.product_name
+),
+ranked AS (
+  SELECT *, RANK() OVER (
+    PARTITION BY category ORDER BY units_sold DESC
+  ) AS rnk
+  FROM product_units
+)
+SELECT * FROM ranked WHERE rnk = 1;
 ```
 
-## HAVING
+To include zero-sales products, start from products and LEFT JOIN aggregated sales.
 
-Filters groups **after aggregation**.
+## Q15. Include products with zero fulfilled sales.
 
 ```sql
-HAVING SUM(amount) > 100000
+WITH sales AS (
+  SELECT product_id, SUM(quantity) AS units_sold
+  FROM order_items WHERE item_status = 'FULFILLED'
+  GROUP BY product_id
+)
+SELECT p.product_id, p.product_name, COALESCE(s.units_sold, 0) AS units_sold
+FROM products p LEFT JOIN sales s ON s.product_id = p.product_id;
 ```
 
-## Example
+Aggregate first so sales has one row per product.
+
+## Q16. Daily order count and merchandise value.
 
 ```sql
-SELECT
-    customer_id,
-    SUM(amount) AS total
+WITH order_value AS (
+  SELECT o.order_id, o.order_ts::date AS order_date, o.currency_code,
+         SUM(oi.quantity * oi.unit_price - COALESCE(oi.item_discount,0)) AS net_value
+  FROM orders o JOIN order_items oi ON oi.order_id = o.order_id
+  WHERE o.order_status = 'COMPLETED' AND oi.item_status = 'FULFILLED'
+  GROUP BY o.order_id, o.order_ts::date, o.currency_code
+)
+SELECT order_date, currency_code, COUNT(*) AS order_count, SUM(net_value) AS net_value
+FROM order_value
+GROUP BY order_date, currency_code
+ORDER BY order_date, currency_code;
+```
+
+The intermediate CTE makes order grain explicit and avoids using COUNT(DISTINCT) as a patch for a multiplied join.
+
+## Q17. Calculate average order value per currency.
+
+Build the order_value CTE from Q16, then AVG(net_value) grouped by currency_code. This makes denominator one row per order. SUM(line value)/COUNT(DISTINCT order_id) can be correct with aligned filters, but the CTE is easier to review and extend.
+
+## Q18. Monthly cancellation rate.
+
+```sql
+SELECT DATE_TRUNC('month', order_ts) AS month,
+       COUNT(*) FILTER (WHERE order_status = 'CANCELLED') AS cancelled,
+       COUNT(*) AS all_orders,
+       100.0 * COUNT(*) FILTER (WHERE order_status = 'CANCELLED')
+         / NULLIF(COUNT(*), 0) AS cancellation_pct
 FROM orders
-WHERE order_date >= DATE '2026-01-01'
+GROUP BY DATE_TRUNC('month', order_ts)
+ORDER BY month;
+```
+
+Portable alternative: SUM(CASE WHEN order_status='CANCELLED' THEN 1 ELSE 0 END). Clarify whether month means order-created month or cancellation-event month; use status history for the latter.
+
+## Q19. Payment attempt success rate by method.
+
+```sql
+SELECT payment_method, COUNT(*) AS attempts,
+       SUM(CASE WHEN payment_status='SUCCESS' THEN 1 ELSE 0 END) AS successes,
+       100.0 * SUM(CASE WHEN payment_status='SUCCESS' THEN 1 ELSE 0 END)
+         / NULLIF(COUNT(*), 0) AS attempt_success_pct
+FROM payments GROUP BY payment_method;
+```
+
+Attempts, orders, and customers are different denominators. Aggregate to order grain for an order-level metric.
+
+## Q20. Customers whose cumulative net value exceeds 1,000 by currency.
+
+Use the customer_value CTE in Q12 and filter `net_value > 1000`. Do not mix currencies.
+
+# 4. Window functions and ranking
+
+## Q21. ROW_NUMBER vs RANK vs DENSE_RANK?
+
+For values 100, 90, 90, 80: ROW_NUMBER gives 1,2,3,4 (with deterministic tie ordering); RANK gives 1,2,2,4; DENSE_RANK gives 1,2,2,3. ROW_NUMBER is for exactly N rows; RANK/DENSE_RANK preserve business ties.
+
+## Q22. Latest order per customer.
+
+```sql
+WITH ranked AS (
+  SELECT o.*, ROW_NUMBER() OVER (
+    PARTITION BY customer_id ORDER BY order_ts DESC, order_id DESC
+  ) AS rn
+  FROM orders o
+)
+SELECT * FROM ranked WHERE rn = 1;
+```
+
+PostgreSQL alternative is DISTINCT ON with matching ORDER BY. ROW_NUMBER is portable. Secondary key makes selection deterministic.
+
+## Q23. First and second order per customer.
+
+```sql
+WITH ranked AS (
+  SELECT o.*, ROW_NUMBER() OVER (
+    PARTITION BY customer_id ORDER BY order_ts, order_id
+  ) AS seq
+  FROM orders o
+)
+SELECT * FROM ranked WHERE seq IN (1,2);
+```
+
+Filter to completed orders inside the CTE if first/second completed order is asked.
+
+## Q24. Latest successful payment per order.
+
+```sql
+WITH ranked AS (
+  SELECT p.*, ROW_NUMBER() OVER (
+    PARTITION BY order_id ORDER BY payment_ts DESC, payment_id DESC
+  ) AS rn
+  FROM payments p WHERE payment_status = 'SUCCESS'
+)
+SELECT * FROM ranked WHERE rn = 1;
+```
+
+This means latest successful payment. To get latest attempt and then check status, rank all attempts first and filter outside. They are not equivalent.
+
+## Q25. Running total per customer/currency.
+
+After aggregating one row per order:
+
+```sql
+SUM(net_value) OVER (
+  PARTITION BY customer_id, currency_code
+  ORDER BY order_ts, order_id
+  ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
+)
+```
+
+Explicit ROWS makes row-by-row accumulation clear and avoids ambiguity with peer rows under default frames.
+
+## Q26. Three-order rolling average per customer.
+
+After order-grain aggregation:
+
+```sql
+AVG(net_value) OVER (
+  PARTITION BY customer_id, currency_code
+  ORDER BY order_ts, order_id
+  ROWS BETWEEN 2 PRECEDING AND CURRENT ROW
+)
+```
+
+Three rows are not three calendar days. Use a date spine or time-based RANGE frame for calendar windows.
+
+## Q27. Compare each order with previous order.
+
+```sql
+WITH order_value AS (
+  SELECT o.order_id, o.customer_id, o.currency_code, o.order_ts,
+         SUM(oi.quantity * oi.unit_price - COALESCE(oi.item_discount,0)) AS net_value
+  FROM orders o JOIN order_items oi ON oi.order_id = o.order_id
+  WHERE o.order_status = 'COMPLETED' AND oi.item_status = 'FULFILLED'
+  GROUP BY o.order_id, o.customer_id, o.currency_code, o.order_ts
+)
+SELECT *, LAG(net_value) OVER (
+  PARTITION BY customer_id, currency_code ORDER BY order_ts, order_id
+) AS previous_order_value
+FROM order_value;
+```
+
+Aggregate before LAG because the target grain is order, not item.
+
+## Q28. Largest order-value increase per customer.
+
+Build on Q27; calculate net_value - previous_order_value, rank descending per customer, exclude rows with no previous order. ROW_NUMBER gives one deterministic winner; clarify if only positive increases count.
+
+## Q29. Customers with at least three completed orders.
+
+```sql
+SELECT customer_id, COUNT(*) AS completed_orders
+FROM orders
+WHERE order_status = 'COMPLETED'
 GROUP BY customer_id
-HAVING SUM(amount) > 100000;
+HAVING COUNT(*) >= 3;
 ```
 
-Think:
+Use a window COUNT only if individual order rows must remain visible.
 
-```text
-FROM
- ↓
-WHERE
- ↓
-GROUP BY
- ↓
-HAVING
- ↓
+## Q30. Median completed order value per currency.
+
+Aggregate to one row per completed order first, then:
+
+```sql
+SELECT currency_code,
+       PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY net_value) AS median_value
+FROM order_value
+GROUP BY currency_code;
+```
+
+If unsupported, implement odd/even median with row numbers. Median and mean answer different questions.
+
+# 5. Time series, cohort, gaps and islands
+
+## Q31. Month-over-month order value.
+
+```sql
+WITH monthly AS (
+  SELECT DATE_TRUNC('month', o.order_ts) AS month, o.currency_code,
+         SUM(oi.quantity * oi.unit_price - COALESCE(oi.item_discount,0)) AS net_value
+  FROM orders o JOIN order_items oi ON oi.order_id = o.order_id
+  WHERE o.order_status = 'COMPLETED' AND oi.item_status = 'FULFILLED'
+  GROUP BY DATE_TRUNC('month', o.order_ts), o.currency_code
+),
+compared AS (
+  SELECT *, LAG(net_value) OVER (
+    PARTITION BY currency_code ORDER BY month
+  ) AS prior_month_value
+  FROM monthly
+)
+SELECT *, 100.0 * (net_value-prior_month_value)
+  / NULLIF(prior_month_value,0) AS mom_growth_pct
+FROM compared;
+```
+
+LAG returns previous row, not necessarily previous calendar month. Fill missing months for calendar continuity.
+
+## Q32. Month spine with zero-filled order counts (PostgreSQL).
+
+```sql
+WITH months AS (
+  SELECT GENERATE_SERIES(
+    DATE '2025-01-01', DATE '2025-12-01', INTERVAL '1 month'
+  )::date AS month_start
+),
+monthly AS (
+  SELECT DATE_TRUNC('month', order_ts)::date AS month_start,
+         currency_code, COUNT(*) AS order_count
+  FROM orders WHERE order_status = 'COMPLETED'
+  GROUP BY DATE_TRUNC('month', order_ts)::date, currency_code
+),
+currencies AS (SELECT DISTINCT currency_code FROM orders)
+SELECT m.month_start, c.currency_code, COALESCE(x.order_count,0) AS order_count
+FROM months m CROSS JOIN currencies c
+LEFT JOIN monthly x
+  ON x.month_start=m.month_start AND x.currency_code=c.currency_code
+ORDER BY m.month_start, c.currency_code;
+```
+
+Snowflake can use generator/calendar tables; BigQuery supports GENERATE_DATE_ARRAY. A calendar dimension is useful for fiscal periods/holidays.
+
+## Q33. Month-N active users retained in N+1.
+
+```sql
+WITH activity AS (
+  SELECT DISTINCT customer_id, DATE_TRUNC('month',event_ts)::date AS month
+  FROM events WHERE customer_id IS NOT NULL
+)
+SELECT a.month, COUNT(*) AS active_customers,
+       COUNT(b.customer_id) AS retained_customers,
+       100.0*COUNT(b.customer_id)/NULLIF(COUNT(*),0) AS retention_pct
+FROM activity a
+LEFT JOIN activity b
+  ON b.customer_id=a.customer_id
+ AND b.month=(a.month+INTERVAL '1 month')::date
+GROUP BY a.month ORDER BY a.month;
+```
+
+This rolling month-to-next-month retention is not signup-cohort retention.
+
+## Q34. Signup-cohort month-1 retention.
+
+```sql
+WITH cohort AS (
+  SELECT customer_id, DATE_TRUNC('month',signup_ts)::date AS cohort_month
+  FROM customers WHERE signup_ts IS NOT NULL
+),
+activity AS (
+  SELECT DISTINCT customer_id, DATE_TRUNC('month',event_ts)::date AS activity_month
+  FROM events WHERE customer_id IS NOT NULL
+),
+sizes AS (
+  SELECT cohort_month, COUNT(*) AS cohort_customers
+  FROM cohort GROUP BY cohort_month
+),
+retained AS (
+  SELECT c.cohort_month, COUNT(DISTINCT c.customer_id) AS retained_customers
+  FROM cohort c JOIN activity a
+    ON a.customer_id=c.customer_id
+   AND a.activity_month=(c.cohort_month+INTERVAL '1 month')::date
+  GROUP BY c.cohort_month
+)
+SELECT s.cohort_month, s.cohort_customers,
+       COALESCE(r.retained_customers,0) AS retained_customers,
+       100.0*COALESCE(r.retained_customers,0)/NULLIF(s.cohort_customers,0) AS month_1_retention
+FROM sizes s LEFT JOIN retained r ON r.cohort_month=s.cohort_month;
+```
+
+Define qualifying activity. Signup month and first-purchase month are distinct cohort definitions.
+
+## Q35. Customers active on three consecutive calendar days.
+
+```sql
+WITH days AS (
+  SELECT DISTINCT customer_id, event_ts::date AS activity_date
+  FROM events WHERE customer_id IS NOT NULL
+),
+x AS (
+  SELECT *,
+         LAG(activity_date,1) OVER (PARTITION BY customer_id ORDER BY activity_date) AS d1,
+         LAG(activity_date,2) OVER (PARTITION BY customer_id ORDER BY activity_date) AS d2
+  FROM days
+)
+SELECT DISTINCT customer_id
+FROM x
+WHERE activity_date=d1+1 AND d1=d2+1;
+```
+
+Deduplicate customer/day to prevent multiple same-day events creating false streaks.
+
+## Q36. Longest consecutive activity streak (gaps-and-islands).
+
+```sql
+WITH days AS (
+  SELECT DISTINCT customer_id, event_ts::date AS activity_date
+  FROM events WHERE customer_id IS NOT NULL
+),
+numbered AS (
+  SELECT *, activity_date - ROW_NUMBER() OVER (
+    PARTITION BY customer_id ORDER BY activity_date
+  )::int AS island_key
+  FROM days
+),
+streaks AS (
+  SELECT customer_id, MIN(activity_date) AS streak_start,
+         MAX(activity_date) AS streak_end, COUNT(*) AS streak_days
+  FROM numbered GROUP BY customer_id, island_key
+),
+ranked AS (
+  SELECT *, ROW_NUMBER() OVER (
+    PARTITION BY customer_id ORDER BY streak_days DESC, streak_end DESC
+  ) AS rn
+  FROM streaks
+)
+SELECT * FROM ranked WHERE rn=1;
+```
+
+Date arithmetic varies by engine; preserve the invariant that consecutive dates map to the same grouping key.
+
+## Q37. Sessionize events with 30-minute inactivity threshold.
+
+```sql
+WITH ordered AS (
+  SELECT e.*, LAG(event_ts) OVER (
+    PARTITION BY customer_id ORDER BY event_ts, event_id
+  ) AS previous_ts
+  FROM events e
+),
+flags AS (
+  SELECT *, CASE
+    WHEN previous_ts IS NULL OR event_ts-previous_ts>INTERVAL '30 minutes'
+    THEN 1 ELSE 0 END AS new_session
+  FROM ordered
+),
+numbered AS (
+  SELECT *, SUM(new_session) OVER (
+    PARTITION BY customer_id ORDER BY event_ts,event_id
+    ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
+  ) AS derived_session
+  FROM flags
+)
+SELECT customer_id, derived_session, MIN(event_ts) AS session_start,
+       MAX(event_ts) AS session_end, COUNT(*) AS event_count
+FROM numbered GROUP BY customer_id,derived_session;
+```
+
+If a trusted session_id already exists, validate it rather than blindly re-sessionizing. Clarify whether exactly 30 minutes creates a new session (`>` or `>=`).
+
+## Q38. Gap between consecutive orders.
+
+```sql
+SELECT customer_id, order_id, order_ts,
+       order_ts-LAG(order_ts) OVER (
+         PARTITION BY customer_id ORDER BY order_ts,order_id
+       ) AS gap_from_previous
+FROM orders;
+```
+
+Clarify whether cancelled and pending orders count.
+
+## Q39. Orders not completed within 24 hours.
+
+```sql
+SELECT order_id,customer_id,order_ts,order_status
+FROM orders
+WHERE order_status<>'COMPLETED'
+  AND order_ts<CURRENT_TIMESTAMP-INTERVAL '24 hours';
+```
+
+This current-state alert is not historical SLA measurement. Use status history to calculate actual completion duration and parameterize an as-of timestamp for reproducibility.
+
+## Q40. Show product/date combinations with zero sales.
+
+Create a date spine, cross join products, left join daily product sales, and COALESCE absent units to zero. Fact-only SQL cannot show dates without fact rows.
+
+# 6. Funnels and behavioral analytics
+
+## Q41. Count distinct users at each funnel event.
+
+```sql
 SELECT
- ↓
-WINDOW
- ↓
-ORDER BY
+ COUNT(DISTINCT CASE WHEN event_name='view_product' THEN customer_id END) AS viewers,
+ COUNT(DISTINCT CASE WHEN event_name='add_to_cart' THEN customer_id END) AS cart_users,
+ COUNT(DISTINCT CASE WHEN event_name='purchase' THEN customer_id END) AS purchasers
+FROM events;
 ```
 
-Exact execution/planning can be more nuanced, but this logical-processing model is essential for reasoning about SQL.
+This is event presence, not ordered conversion.
 
----
-
-# CTE vs SUBQUERY
-
-## CTE
+## Q42. Ordered view → cart → purchase within a session.
 
 ```sql
-WITH customer_sales AS (
-    SELECT ...
+WITH steps AS (
+  SELECT customer_id,session_id,
+    MIN(CASE WHEN event_name='view_product' THEN event_ts END) AS view_ts,
+    MIN(CASE WHEN event_name='add_to_cart' THEN event_ts END) AS cart_ts,
+    MIN(CASE WHEN event_name='purchase' THEN event_ts END) AS purchase_ts
+  FROM events GROUP BY customer_id,session_id
 )
-SELECT ...
-FROM customer_sales;
+SELECT COUNT(*) FILTER(WHERE view_ts IS NOT NULL) AS viewed,
+       COUNT(*) FILTER(WHERE view_ts IS NOT NULL AND cart_ts>=view_ts) AS cart_after_view,
+       COUNT(*) FILTER(WHERE view_ts IS NOT NULL AND cart_ts>=view_ts
+                                     AND purchase_ts>=cart_ts) AS purchase_after_cart
+FROM steps;
 ```
 
-Useful for:
+This is a simplified session funnel. Product-level matching and repeated events require event sequencing and product ID matching. Define attribution window and allowed gaps.
 
-* Readability.
-* Breaking complex logic into steps.
-* Reusing intermediate logic in the query.
+## Q43. Funnel conversion percentages.
 
-## Subquery
+Using the same validated funnel base, calculate cart/view, purchase/cart, and purchase/view with `100.0 * numerator / NULLIF(denominator,0)`. Keep numerator and denominator populations aligned.
 
-```sql
-SELECT *
-FROM (
-    SELECT ...
-) x;
-```
+## Q44. Product view followed by purchase within seven days.
 
-Useful for:
+Join view events to purchase events on customer/product; require purchase time >= view time and < view time + 7 days. If purchase events carry only order_id, join orders and order_items to identify purchased product. Deduplicate at the chosen attribution grain.
 
-* Local/nested logic.
-* Small transformations.
+Clarify first-touch vs last-touch vs multi-touch attribution when several views precede purchase.
 
-## Senior point
-
-Do not claim:
-
-> "CTEs are always faster."
-
-They are primarily a query-structuring mechanism; optimizer behavior depends on the database and query.
-
----
-
-# UNION vs UNION ALL
-
-## UNION
-
-Removes duplicates.
+## Q45. Customer/product viewed but never purchased later.
 
 ```sql
-SELECT ...
-UNION
-SELECT ...
-```
-
-## UNION ALL
-
-Keeps duplicates.
-
-```sql
-SELECT ...
-UNION ALL
-SELECT ...
-```
-
-`UNION ALL` is generally preferable when deduplication is not required because it avoids the extra duplicate-removal work.
-
----
-
-# EXISTS vs IN vs JOIN
-
-## EXISTS
-
-Good for existence checks:
-
-```sql
-WHERE EXISTS (
+SELECT DISTINCT v.customer_id,v.product_id
+FROM events v
+WHERE v.event_name='view_product' AND v.product_id IS NOT NULL
+  AND NOT EXISTS (
     SELECT 1
-    FROM orders o
-    WHERE o.customer_id = c.customer_id
-)
+    FROM events p JOIN order_items oi
+      ON oi.order_id=p.order_id AND oi.product_id=v.product_id
+    WHERE p.customer_id=v.customer_id
+      AND p.event_name='purchase'
+      AND p.event_ts>=v.event_ts
+  );
 ```
 
-## JOIN
+No attribution horizon is applied here. Add a window if required and decide whether any later session counts.
 
-Use when you need columns from the other table.
-
-## IN
-
-Convenient for membership conditions.
-
-## Senior answer
-
-> "I choose based on semantics first and then verify performance with the database's optimizer and execution plan."
-
----
-
-# SQL PERFORMANCE CHECKLIST
-
-When a query is slow:
-
-```text
-□ Is the query scanning too much data?
-□ Am I selecting unnecessary columns?
-□ Can I filter earlier?
-□ Is a function applied to a filter/join column?
-□ Is the join cardinality correct?
-□ Are there duplicate join keys?
-□ Is the join selective?
-□ Is there a missing/ineffective index?
-□ Is partition pruning happening?
-□ Is clustering/distribution appropriate?
-□ Is a sort expensive?
-□ Is aggregation expensive?
-□ Is cardinality estimation wrong?
-□ Are statistics current?
-□ Is there data skew?
-□ Is the query running concurrently with heavy workloads?
-```
-
-The optimizer chooses plans based on schema, indexes/statistics and query structure; examining execution plans is therefore central to diagnosing performance.
-
----
-
-# 20 SQL PATTERNS YOU MUST MEMORIZE
-
-These patterns appear again and again in senior Data Engineering interviews.
-
-```text
-1. Top N per group
-2. Deduplication
-3. Latest record
-4. First record
-5. Second record
-6. Running total
-7. Rolling average
-8. LAG / LEAD
-9. Gaps and islands
-10. Consecutive days
-11. Anti-join
-12. Semi-join
-13. Self join
-14. Conditional aggregation
-15. Two-level aggregation
-16. Sessionization
-17. Funnel analysis
-18. Retention
-19. Reconciliation
-20. SCD Type 2
-```
-
----
-
-# 15 SQL CODING QUESTIONS TO PRACTICE WITHOUT LOOKING AT THE ANSWER
-
-After studying the chapter, close your notes and solve these yourself:
-
-```text
-1. Find the 3rd highest distinct salary.
-
-2. Find top 2 products by revenue in every region.
-
-3. Remove duplicate transactions keeping the latest ingestion.
-
-4. Find customers whose spending increased every month for 3 months.
-
-5. Find the longest consecutive login streak.
-
-6. Find employees who joined before their manager.
-
-7. Find users who logged in this week but not last week.
-
-8. Find the first purchase after signup.
-
-9. Find the percentage of customers making a second purchase.
-
-10. Find the largest day-over-day revenue increase.
-
-11. Find the top 5% customers by revenue.
-
-12. Find customers whose latest order amount is higher than their previous order.
-
-13. Detect gaps greater than 30 days in customer activity.
-
-14. Reconcile source and target datasets using keys + aggregates.
-
-15. Build a Type 2 dimension from a source snapshot.
-```
-
----
-
-# 10 SQL QUESTIONS THAT TEST SENIOR-LEVEL THINKING
-
-These don't have a single "trick query."
-
-The interviewer wants to see your reasoning.
-
-## 1
-
-> "Why did the query suddenly become slower after the table grew from 100 GB to 5 TB?"
-
-Think:
-
-```text
-Data volume
-↓
-Partitioning
-↓
-Statistics
-↓
-Cardinality
-↓
-Join strategy
-↓
-Physical layout
-```
-
-## 2
-
-> "Why did a LEFT JOIN double the revenue?"
-
-Think:
-
-```text
-One-to-many multiplication
-```
-
-## 3
-
-> "Why does COUNT(*) look correct but SUM(amount) is wrong?"
-
-Think:
-
-```text
-Duplicated fact rows
-```
-
-## 4
-
-> "How do you prove source and target are identical?"
-
-Think:
-
-```text
-Count
-+
-Distinct keys
-+
-Aggregates
-+
-Difference sets
-+
-Hash/row comparison
-```
-
-## 5
-
-> "How do you query 5 billion rows efficiently?"
-
-Think:
-
-```text
-Partition pruning
-+
-Column pruning
-+
-Selective predicates
-+
-Efficient joins
-+
-Physical layout
-+
-Execution plan
-```
-
-## 6
-
-> "How do you handle late-arriving corrections?"
-
-Think:
-
-```text
-Business key
-+
-version/timestamp
-+
-MERGE/upsert
-+
-idempotency
-```
-
-## 7
-
-> "How would you find the latest valid state?"
-
-Think:
-
-```text
-ROW_NUMBER
-+
-business key
-+
-ordering columns
-```
-
-## 8
-
-> "Why did DISTINCT hide your bug?"
-
-Think:
-
-```text
-Wrong grain
-+
-many-to-many join
-```
-
-## 9
-
-> "How would you make this query incremental?"
-
-Think:
-
-```text
-watermark
-+
-changed records
-+
-partition pruning
-+
-merge
-```
-
-## 10
-
-> "Would you add an index?"
-
-Never automatically say yes.
-
-Think:
-
-```text
-Read frequency
-+
-write frequency
-+
-selectivity
-+
-table size
-+
-storage
-+
-maintenance
-+
-query pattern
-```
-
----
-
-# YOUR RESUME → SQL INTERVIEW STORY BANK
-
-Your resume gives you unusually strong real-world material for SQL interviews.
-
-| SQL Area       | Your Experience                              |
-| -------------- | -------------------------------------------- |
-| Reconciliation | Source-to-target / table-to-table validation |
-| Data quality   | Null, duplicate, schema, mismatch checks     |
-| Redshift SQL   | Metadata + schema governance                 |
-| Snowflake      | PostgreSQL → Snowflake pipelines             |
-| Big Data SQL   | Hive analytical datasets                     |
-| Azure          | SQL Server + ADF + Databricks                |
-| GCP            | BigQuery analytical workloads                |
-| Migration      | Data reconciliation and cutover validation   |
-| Metadata       | YAML/config-driven validation                |
-| BI             | Tableau / Power BI trusted datasets          |
-
-Your resume specifically identifies Redshift, BigQuery, Snowflake, SQL Server, Hive, ADF and Databricks across your projects.
-
----
-
-# YOUR 60-SECOND SQL INTRODUCTION IN AN INTERVIEW
-
-When asked:
-
-> "How strong are you in SQL?"
-
-Do not answer:
-
-> "I know joins, subqueries, group by and window functions."
-
-Use your production experience:
-
-> "SQL has been one of my core data-engineering skills across warehouse, big-data and cloud platforms. I've used it for source-to-target reconciliation, data-quality validation, analytical transformations, data migration and warehouse optimization across technologies such as Redshift, Snowflake, BigQuery, SQL Server and Hive. For complex problems, I'm comfortable with window functions, CTEs, multi-level aggregations, deduplication, SCD patterns and incremental processing. From a production perspective, I also focus on join cardinality, query plans, partition pruning, data volume and correctness rather than only writing a syntactically correct query."
-
----
-
-# THE 10 GOLDEN SQL STATEMENTS
-
-Memorize these.
-
-### 1
-
-> "Before writing the query, I identify the grain of the source and expected result."
-
-### 2
-
-> "I check join cardinality before assuming duplicate rows are a data issue."
-
-### 3
-
-> "I use window functions when I need calculations across related rows without collapsing the result set."
-
-### 4
-
-> "For top-N-per-group problems, I usually think in terms of partitioning plus ranking."
-
-### 5
-
-> "For reconciliation, count equality alone is not sufficient."
-
-### 6
-
-> "I avoid using DISTINCT as a blanket fix for unexpected duplicates."
-
-### 7
-
-> "I optimize queries based on execution plans and actual workload behavior rather than assumptions."
-
-### 8
-
-> "For large datasets, I want to minimize the amount of data scanned and moved."
-
-### 9
-
-> "I make NULL behavior explicit in data-quality and reconciliation logic."
-
-### 10
-
-> "For production SQL, correctness, scalability and explainability are equally important."
-
----
-
-# FINAL SQL REVISION SHEET
-
-```text
-WINDOW FUNCTIONS
-├── ROW_NUMBER
-├── RANK
-├── DENSE_RANK
-├── LAG
-├── LEAD
-├── SUM OVER
-├── AVG OVER
-└── Window Frames
-
-JOINS
-├── INNER
-├── LEFT
-├── RIGHT
-├── FULL
-├── CROSS
-├── SELF
-├── SEMI
-└── ANTI
-
-AGGREGATION
-├── GROUP BY
-├── HAVING
-├── Conditional Aggregation
-├── Multi-level Aggregation
-└── Distinct Aggregation
-
-ADVANCED PATTERNS
-├── Gaps & Islands
-├── Sessionization
-├── Funnel
-├── Retention
-├── SCD Type 2
-├── Reconciliation
-└── Incremental Processing
-
-PERFORMANCE
-├── EXPLAIN
-├── Execution Plan
-├── Indexes
-├── Partition Pruning
-├── Statistics
-├── Cardinality
-├── Join Strategy
-└── Data Volume
-
-DATA ENGINEERING SQL
-├── Deduplication
-├── Source/Target Validation
-├── Schema Validation
-├── Incremental Loads
-├── MERGE / UPSERT
-└── Audit Queries
-```
-
----
-
-# SQL INTERVIEW SELF-TEST
-
-You should be able to solve these **from a blank editor**:
-
-```text
-□ Second highest salary
-□ Nth highest salary
-□ Top 3 by department
-□ Latest record per key
-□ Deduplicate table
-□ Customers with no orders
-□ Products never sold
-□ Running total
-□ Rolling 7-day average
-□ Month-over-month growth
-□ First order
-□ Second order
-□ Consecutive days
-□ Longest inactivity
-□ Gaps and islands
-□ Sessionization
-□ Funnel conversion
-□ Customer retention
-□ Median
-□ SCD Type 2
-□ Source vs target reconciliation
-□ Source-only records
-□ Target-only records
-□ Changed records
-□ Many-to-many double counting
-□ Query-performance debugging
-□ Execution-plan interpretation
-□ Incremental SQL
-□ NULL-safe comparison
-□ Top-N analytical reporting
-```
-
----
-
-# MOST IMPORTANT TAKEAWAY
-
-At 70+ LPA level, the interviewer is usually not impressed merely because you can write:
+## Q46. Deduplicate raw event deliveries by event ID.
 
 ```sql
-SELECT ...
-FROM ...
-JOIN ...
-GROUP BY ...
+WITH ranked AS (
+  SELECT r.*, ROW_NUMBER() OVER (
+    PARTITION BY event_id
+    ORDER BY source_updated_at DESC NULLS LAST, ingested_at DESC
+  ) AS rn
+  FROM raw_events r
+)
+SELECT * FROM ranked WHERE rn=1;
 ```
 
-The stronger signal is:
+Keep immutable raw ingestion separate from curated canonical events. The curated teaching DDL assumes event_id uniqueness.
 
-```text
-I understand the data grain
-        ↓
-I understand join cardinality
-        ↓
-I understand business semantics
-        ↓
-I handle NULLs and duplicates
-        ↓
-I can solve analytical problems
-        ↓
-I can make it incremental
-        ↓
-I can reconcile source and target
-        ↓
-I can diagnose performance
-        ↓
-I can explain the trade-off
+# 7. Deduplication, CDC, and SCD
+
+## Q47. Keep latest customer version by source update.
+
+```sql
+WITH ranked AS (
+ SELECT r.*,ROW_NUMBER() OVER(
+   PARTITION BY customer_id
+   ORDER BY source_updated_at DESC NULLS LAST,ingested_at DESC
+ ) AS rn
+ FROM raw_customers r
+)
+SELECT * FROM ranked WHERE rn=1;
 ```
 
-That is the SQL level you should target.
+Use deterministic tie-breakers. Do not remove tombstones before ranking, or old active rows may be resurrected.
 
----
+## Q48. Duplicate emails after normalization.
 
-# RESEARCH BASIS
-
-The technical concepts in this chapter were cross-checked against current database documentation, including:
-
-* PostgreSQL 18 documentation for window functions.
-* PostgreSQL 18 documentation for `EXPLAIN`, `EXPLAIN ANALYZE`, execution plans and statistics.
-* Microsoft SQL Server documentation for execution plans, optimizer behavior and actual vs estimated plans.
-* Snowflake documentation for window-function syntax and `QUALIFY`.
-
----
-
-# END OF TOPIC 3
-
-```text
-1. Data Engineering           ✅
-2. Big Data Engineering       ✅
-3. SQL                        ✅
-
-NEXT
-4. Python — Practical + Programming
-5. PySpark — Practical + Programming
-6. DevOps — Top 10
-7. AI — Data Engineering
-8. Databricks
-9. Snowflake
-10. AWS
-11. Azure
-12. GCP
+```sql
+SELECT LOWER(TRIM(email)) AS normalized_email,COUNT(*) AS customer_count
+FROM customers
+WHERE email IS NOT NULL
+GROUP BY LOWER(TRIM(email))
+HAVING COUNT(*)>1;
 ```
+
+Email may not be a unique identity key. Shared/recycled addresses and normalization rules require an identity policy.
+
+## Q49. Detect changed attributes with LAG.
+
+```sql
+WITH x AS (
+ SELECT customer_id,country_code,email,source_updated_at,
+        LAG(country_code) OVER(PARTITION BY customer_id ORDER BY source_updated_at,ingested_at) AS old_country,
+        LAG(email) OVER(PARTITION BY customer_id ORDER BY source_updated_at,ingested_at) AS old_email
+ FROM raw_customer_changes
+)
+SELECT * FROM x
+WHERE country_code IS DISTINCT FROM old_country
+   OR email IS DISTINCT FROM old_email;
+```
+
+IS DISTINCT FROM is PostgreSQL NULL-safe syntax; use equivalent syntax in other dialects.
+
+## Q50. Build SCD Type 2 from daily snapshots.
+
+```sql
+WITH ordered AS (
+ SELECT s.*,
+        LAG(country_code) OVER(PARTITION BY customer_id ORDER BY snapshot_date) AS old_country,
+        LAG(email) OVER(PARTITION BY customer_id ORDER BY snapshot_date) AS old_email
+ FROM customer_snapshot s
+),
+changes AS (
+ SELECT * FROM ordered
+ WHERE old_country IS NULL
+    OR country_code IS DISTINCT FROM old_country
+    OR email IS DISTINCT FROM old_email
+),
+versions AS (
+ SELECT customer_id,customer_name,email,country_code,
+        snapshot_date AS effective_from,
+        LEAD(snapshot_date) OVER(PARTITION BY customer_id ORDER BY snapshot_date) AS next_from
+ FROM changes
+)
+SELECT customer_id,customer_name,email,country_code,effective_from,
+       COALESCE(next_from-1,DATE '9999-12-31') AS effective_to,
+       (next_from IS NULL) AS is_current
+FROM versions;
+```
+
+This example uses inclusive date ends. Half-open `[effective_from,effective_to)` intervals are usually safer for timestamps. Daily snapshots miss multiple within-day changes; late history requires interval correction; define tracked attributes, deletes, source precedence, and surrogate keys.
+
+## Q51. SCD Type 1 vs 2 vs 3?
+
+Type 1 overwrites; Type 2 inserts effective-dated versions; Type 3 keeps limited prior values in columns. Choose based on analytical history, privacy, correction, and query requirements.
+
+## Q52. Idempotent latest-state upsert in PostgreSQL.
+
+```sql
+INSERT INTO customers (
+ customer_id,customer_name,email,country_code,signup_ts,created_at,updated_at,
+ is_deleted,source_updated_at,ingested_at
+)
+SELECT customer_id,customer_name,email,country_code,signup_ts,created_at,updated_at,
+       is_deleted,source_updated_at,ingested_at
+FROM staged_customers
+ON CONFLICT(customer_id) DO UPDATE SET
+ customer_name=EXCLUDED.customer_name,
+ email=EXCLUDED.email,
+ country_code=EXCLUDED.country_code,
+ updated_at=EXCLUDED.updated_at,
+ is_deleted=EXCLUDED.is_deleted,
+ source_updated_at=EXCLUDED.source_updated_at,
+ ingested_at=EXCLUDED.ingested_at
+WHERE EXCLUDED.source_updated_at>customers.source_updated_at;
+```
+
+Older replays cannot overwrite newer state. Define NULL source timestamp ordering, tombstones, source sequence, and concurrency behavior.
+
+## Q53. Process CDC inserts, updates, deletes.
+
+Preserve raw source event identity, business key, operation, source sequence/LSN, commit time, ingestion time. Deduplicate retransmissions by event identity; order changes by source sequence; apply tombstones per policy; make writes idempotent; checkpoint after durable target commit or build recovery for partial commit; reconcile source offsets to target state.
+
+## Q54. Late-arriving facts/dimensions?
