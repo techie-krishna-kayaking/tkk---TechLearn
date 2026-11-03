@@ -997,3 +997,617 @@ Older replays cannot overwrite newer state. Define NULL source timestamp orderin
 Preserve raw source event identity, business key, operation, source sequence/LSN, commit time, ingestion time. Deduplicate retransmissions by event identity; order changes by source sequence; apply tombstones per policy; make writes idempotent; checkpoint after durable target commit or build recovery for partial commit; reconcile source offsets to target state.
 
 ## Q54. Late-arriving facts/dimensions?
+
+Keep event, source-update, and ingestion times. Use inferred/unknown dimension members or stage facts until dimension arrives. Resolve Type 2 version effective at fact business time. Correct impacted keys/partitions per restatement policy. Trade-off: immediate availability with inferred members vs delayed completeness.
+
+## Q55. Event time vs processing time vs ingestion time?
+
+Event time is when business event happened; processing time is when system processed it; ingestion time is when it landed. They drive different windowing, freshness, watermark, and replay behavior.
+
+# 8. Data quality and reconciliation
+
+## Q56. Source-only order IDs.
+
+```sql
+SELECT s.order_id FROM source_orders s
+WHERE NOT EXISTS (
+ SELECT 1 FROM target_orders t WHERE t.order_id=s.order_id
+);
+```
+
+Reverse source/target for target-only keys. Key-set equality does not validate duplicate counts.
+
+## Q57. Reconcile row counts.
+
+```sql
+SELECT 'source' AS dataset,COUNT(*) AS rows FROM source_orders
+UNION ALL
+SELECT 'target',COUNT(*) FROM target_orders;
+```
+
+Equal counts can hide offsetting missing/duplicate rows. Add distinct keys, duplicate checks, controls, and row mismatches.
+
+## Q58. Compare source/target aggregates by day/currency.
+
+```sql
+WITH s AS (
+ SELECT order_ts::date AS d,currency_code,COUNT(*) AS cnt,SUM(order_total) AS amount
+ FROM source_orders GROUP BY order_ts::date,currency_code
+),
+t AS (
+ SELECT order_ts::date AS d,currency_code,COUNT(*) AS cnt,SUM(order_total) AS amount
+ FROM target_orders GROUP BY order_ts::date,currency_code
+)
+SELECT COALESCE(s.d,t.d) AS order_date,
+       COALESCE(s.currency_code,t.currency_code) AS currency,
+       s.cnt AS source_count,t.cnt AS target_count,
+       s.amount AS source_amount,t.amount AS target_amount
+FROM s FULL OUTER JOIN t ON s.d=t.d AND s.currency_code=t.currency_code
+WHERE s.cnt IS DISTINCT FROM t.cnt OR s.amount IS DISTINCT FROM t.amount;
+```
+
+Reconcile at useful partitions, then drill down to keys. Define decimal tolerance/rounding.
+
+## Q59. Duplicate order keys in raw data.
+
+```sql
+SELECT order_id,COUNT(*) AS copies
+FROM raw_orders GROUP BY order_id HAVING COUNT(*)>1;
+```
+
+Inspect candidates and source metadata before choosing canonical records.
+
+## Q60. Null-safe full row comparison.
+
+```sql
+SELECT s.order_id
+FROM source_orders s JOIN target_orders t ON t.order_id=s.order_id
+WHERE s.customer_id IS DISTINCT FROM t.customer_id
+   OR s.order_status IS DISTINCT FROM t.order_status
+   OR s.currency_code IS DISTINCT FROM t.currency_code
+   OR s.order_total IS DISTINCT FROM t.order_total;
+```
+
+Hashes require canonical serialization, type/decimal/timestamp normalization, explicit NULL representation, and algorithm/version metadata. Hash matches are not a substitute for a validation strategy.
+
+## Q61. Orphan order items.
+
+```sql
+SELECT oi.* FROM order_items oi
+WHERE NOT EXISTS (SELECT 1 FROM orders o WHERE o.order_id=oi.order_id);
+```
+
+Repeat for customer/order and product/item. Warehouses may not enforce FK constraints, so test them.
+
+## Q62. Invalid item values.
+
+```sql
+SELECT * FROM order_items
+WHERE quantity<=0 OR unit_price<0 OR item_discount<0
+   OR item_discount>quantity*unit_price;
+```
+
+Returns/adjustments may be negative by design; model those explicitly.
+
+## Q63. Reconcile item totals to successful payments.
+
+```sql
+WITH i AS (
+ SELECT order_id,SUM(quantity*unit_price-COALESCE(item_discount,0)) AS item_value
+ FROM order_items WHERE item_status='FULFILLED' GROUP BY order_id
+),
+p AS (
+ SELECT order_id,SUM(amount) AS paid_value
+ FROM payments WHERE payment_status='SUCCESS' GROUP BY order_id
+)
+SELECT COALESCE(i.order_id,p.order_id) AS order_id,i.item_value,p.paid_value,
+       COALESCE(p.paid_value,0)-COALESCE(i.item_value,0) AS difference
+FROM i FULL OUTER JOIN p ON p.order_id=i.order_id
+WHERE i.item_value IS DISTINCT FROM p.paid_value;
+```
+
+Payments may include tax/shipping or exclude refunds/fees. Define financial contract before labeling a mismatch.
+
+## Q64. Orders with multiple successful payments.
+
+```sql
+SELECT order_id,COUNT(*) AS successes
+FROM payments WHERE payment_status='SUCCESS'
+GROUP BY order_id HAVING COUNT(*)>1;
+```
+
+Could be split tender or duplicate charge; business rules decide severity.
+
+## Q65. Design data-quality tests.
+
+Uniqueness at declared grain; required non-NULL identifiers/timestamps/currency; referential integrity; accepted statuses/currencies; numeric ranges; freshness; volume/distribution anomalies; source-target reconciliation; temporal consistency; PII controls. Staff/Principal also define severity, owner, alert, contract, remediation runbook, and error budget.
+
+## Q66. Quarantine invalid records.
+
+Split accepted/rejected deterministically. Preserve rejected payload, reason code, source identity, batch/offset, ingestion metadata. Strict batch failure gives atomicity but can block good rows; row-level quarantine improves availability but needs explicit partial-completeness status and replay.
+
+# 9. Query optimization and execution plans
+
+## Q67. Query scans billions of rows for one day. What do you do?
+
+Confirm timezone and bounds; use half-open timestamp range; project only needed columns; inspect partition pruning/bytes; check indexes/clustering/distribution by engine; validate stats/cardinality; consider recurring aggregate models; measure runtime, bytes, spill and concurrency.
+
+```sql
+SELECT order_id,customer_id,order_ts,currency_code
+FROM orders
+WHERE order_ts>=TIMESTAMP '2025-03-01 00:00:00'
+  AND order_ts<TIMESTAMP '2025-03-02 00:00:00';
+```
+
+## Q68. Why can CAST(timestamp AS DATE) slow a filter?
+
+Applying a function to a filter column may prevent index/partition pruning depending on engine/layout. Use a half-open range and prove via plan. Expression indexes/partition expressions can change the outcome.
+
+## Q69. Why is SELECT * expensive in columnar systems?
+
+Can read unnecessary columns, increase bytes, network, memory and materialization. Project required columns while retaining needed audit columns.
+
+## Q70. Why does a join multiply rows?
+
+Join keys aren't unique at intended grain. Profile both sides, state expected cardinality, aggregate children before joining. DISTINCT/dividing measures is not a valid generic fix.
+
+## Q71. Query suddenly 20× slower. Debug it.
+
+Compare same parameters; plans; query text; data volume; stats; partitions; skew; concurrency; scan/join/sort/aggregate spill; estimated vs actual cardinality; recent releases/schema changes. Mitigate SLA impact; measure and document. Do not blindly add indexes, force hints, or resize warehouse.
+
+## Q72. EXPLAIN vs EXPLAIN ANALYZE?
+
+EXPLAIN shows proposed scans/joins/filters/sorts/aggregates and estimates. EXPLAIN ANALYZE (or engine equivalent) executes and reports actual runtime/cardinality. Use care in production. Compare estimates to actuals at key plan nodes.
+
+## Q73. Optimize large fact-to-dimension join.
+
+Filter fact partitions; verify dimension key uniqueness/temporal join; project columns; aggregate only if semantics permit; broadcast only if side is truly small and platform supports; handle skew; align layout; inspect shuffle/spill/bytes. Principal: optimize workload portfolio, not one query.
+
+## Q74. What is skew?
+
+A few keys dominate rows/work, creating stragglers.
+
+```sql
+SELECT customer_id,COUNT(*) AS rows_per_customer
+FROM orders GROUP BY customer_id
+ORDER BY rows_per_customer DESC LIMIT 20;
+```
+
+Use early aggregation, hot-key isolation, salting when mathematically valid, adaptive execution, or redesign. Prove skew first.
+
+## Q75. Partition pruning?
+
+Skip physical partitions unable to match predicates. This is unrelated to logical PARTITION BY in window functions.
+
+## Q76. Index vs partition vs clustering?
+
+Index: access structure in index-oriented engines. Partition: physical/logical division enabling elimination/lifecycle. Clustering/sorting: co-locates values for pruning/compression/access. Select based on engine, selectivity, data size, updates, workload.
+
+## Q77. Are CTEs faster than subqueries?
+
+Not inherently. CTEs structure logic; engines inline/materialize differently. Choose clarity, inspect plan, materialize only when reuse/performance evidence supports it.
+
+## Q78. When use materialized views/aggregate tables?
+
+Repeated expensive logic, stable grain/metric, freshness compatible with refresh. Trade-offs: staleness, refresh cost, invalidation, lineage, semantic drift.
+
+## Q79. Tune expensive sort/window operations.
+
+Inspect rows entering window, sort keys, memory/spill, repeated incompatible sorts. Reduce input only when semantics remain identical; filtering before ranking can change results.
+
+## Q80. PostgreSQL vs Snowflake vs BigQuery tuning?
+
+PostgreSQL: indexes, stats, vacuum/analyze, joins, buffers, partitions/concurrency. Snowflake: micro-partition pruning, justified clustering, warehouse sizing/concurrency, query profile/spill/cache. BigQuery: partition filters, clustering, bytes, slots, shuffle, materialized aggregates. Translate principles to each engine; don't transplant tactics blindly.
+
+# 10. Incremental processing and production SQL
+
+## Q81. Incremental extraction with watermark.
+
+```sql
+SELECT *
+FROM source_orders
+WHERE source_updated_at>:last_successful_watermark
+  AND source_updated_at<=:batch_cutoff;
+```
+
+Freeze upper cutoff for deterministic retries. Timestamp collisions, late updates, clock drift, and deletes are risks. Prefer source-native sequence/LSN; otherwise composite cursor or overlap plus idempotent merge/reconciliation.
+
+## Q82. Why is timestamp-only watermark unsafe?
+
+Rows share timestamps; old updates arrive late; source clocks differ; deletes invisible to simple scans. Prefer source sequence; else stable tie-breaker, overlap, idempotency, reconciliation.
+
+## Q83. Make pipeline idempotent.
+
+Stable event/batch identity; deterministic dedupe; version-aware merge; tombstones; durable checkpoint; recovery from partial commit; reconciliation. Replaying same input must not change final state after first success.
+
+## Q84. Safe MERGE pattern.
+
+```sql
+MERGE INTO target_orders t
+USING deduplicated_stage_orders s
+ON t.order_id=s.order_id
+WHEN MATCHED AND s.source_sequence>t.source_sequence
+THEN UPDATE SET customer_id=s.customer_id,
+                order_status=s.order_status,
+                order_ts=s.order_ts,
+                source_sequence=s.source_sequence,
+                updated_at=CURRENT_TIMESTAMP
+WHEN NOT MATCHED THEN INSERT
+(order_id,customer_id,order_status,order_ts,source_sequence,updated_at)
+VALUES
+(s.order_id,s.customer_id,s.order_status,s.order_ts,s.source_sequence,CURRENT_TIMESTAMP);
+```
+
+Ensure source has at most one row per merge key. Duplicate matches can error or be engine-specific; deduplicate first.
+
+## Q85. Process deletes incrementally.
+
+Capture CDC deletes/tombstones. Absence from a bounded incremental extract is not proof of deletion. Define physical delete vs soft delete vs history retention.
+
+## Q86. Backfill 18 months without breaking live pipeline.
+
+Freeze source snapshot/range; isolate compute; bounded idempotent partitions; deterministic precedence for overlap; checkpoints; per-partition reconciliation; publish only complete partitions; throttle cost/concurrency; pause/resume/rollback. Staff/Principal also plan capacity, change communication, completeness indicators.
+
+## Q87. Schema evolution?
+
+Classify additive/breaking; validate types/nullability/meaning; version contracts; tolerate compatible optional additions; quarantine breaking changes; compatibility tests and lineage; controlled rollout/deprecation. Renamed fields silently landing as NULL are not harmless.
+
+## Q88. Late update vs duplicate delivery?
+
+Duplicate delivery repeats same logical source event. Late update is a new change to old entity arriving later. Deduplicate via event identity; order state by source version/sequence, not ingestion time.
+
+## Q89. Point-in-time reproducibility?
+
+Preserve immutable inputs, source offsets/snapshot, code/model version, reference data versions, parameters, timezone/calendar assumptions, and lineage. Makes audits, incident analysis, and restatements repeatable.
+
+## Q90. Customer deletion/privacy request?
+
+Follow legal basis, retention obligations, classification, and approved policy. Identify identifiers across raw/curated/derived/cache/backup; delete/anonymize/restrict as approved; propagate tombstones; audit completion; reapply deletion after restores. A DELETE from customers alone is not a privacy program.
+
+# 11. Advanced SQL and edge cases
+
+## Q91. Derive status intervals.
+
+```sql
+SELECT order_id,order_status,status_ts AS valid_from,
+       LEAD(status_ts) OVER(
+         PARTITION BY order_id ORDER BY status_ts,status_event_id
+       ) AS valid_to
+FROM order_status_history;
+```
+
+Use half-open intervals; validate duplicate timestamps and ordering.
+
+## Q92. Duration per status as of timestamp.
+
+```sql
+WITH x AS (
+ SELECT order_id,order_status,status_ts AS valid_from,
+        LEAD(status_ts) OVER(
+          PARTITION BY order_id ORDER BY status_ts,status_event_id
+        ) AS next_from
+ FROM order_status_history
+)
+SELECT order_id,order_status,valid_from,
+       COALESCE(next_from,:as_of_ts) AS valid_to,
+       COALESCE(next_from,:as_of_ts)-valid_from AS duration
+FROM x;
+```
+
+As-of parameter makes results reproducible.
+
+## Q93. Detect invalid status transitions.
+
+Use LAG(status) per order then join to a governed allowed-transition table. Do not bury complex workflow rules in ad hoc CASE logic.
+
+## Q94. Product share of category revenue.
+
+Aggregate to product/category, then:
+
+```sql
+100.0*product_revenue /
+NULLIF(SUM(product_revenue) OVER(PARTITION BY category),0)
+```
+
+Two-stage calculation preserves product rows while deriving category denominator.
+
+## Q95. Products contributing >20% of category revenue.
+
+Build on Q94 and filter window result in outer query or QUALIFY where supported. Define zero-revenue behavior.
+
+## Q96. Pivot statuses into columns.
+
+```sql
+SELECT customer_id,
+ SUM(CASE WHEN order_status='COMPLETED' THEN 1 ELSE 0 END) AS completed,
+ SUM(CASE WHEN order_status='CANCELLED' THEN 1 ELSE 0 END) AS cancelled,
+ SUM(CASE WHEN order_status='PENDING' THEN 1 ELSE 0 END) AS pending
+FROM orders GROUP BY customer_id;
+```
+
+Conditional aggregation is portable; native PIVOT differs by engine.
+
+## Q97. Unpivot status columns.
+
+Use UNION ALL for portability or engine-specific UNPIVOT. Preserve metric name and compatible value types.
+
+## Q98. Orders with failed attempts and no successful attempt.
+
+```sql
+SELECT order_id
+FROM payments
+GROUP BY order_id
+HAVING SUM(CASE WHEN payment_status='FAILED' THEN 1 ELSE 0 END)>0
+   AND SUM(CASE WHEN payment_status='SUCCESS' THEN 1 ELSE 0 END)=0;
+```
+
+EXISTS failed plus NOT EXISTS successful is an equally valid expression.
+
+## Q99. Detect duplicate payment attempts.
+
+Profile candidate identity using order, attempt number, amount, status, and bounded time. Fuzzy duplicates require a defined tolerance/matching policy. Same amount alone does not prove duplicate charge.
+
+## Q100. Payment timestamp earlier than order timestamp.
+
+```sql
+SELECT o.order_id,o.order_ts,p.payment_ts
+FROM orders o JOIN payments p ON p.order_id=o.order_id
+WHERE p.payment_ts<o.order_ts;
+```
+
+Check timezone, clock drift, backdated events, and whether both are event timestamps rather than ingestion timestamps.
+
+## Q101. Customers purchased in Jan but not Feb 2025.
+
+```sql
+WITH months AS (
+ SELECT DISTINCT customer_id,DATE_TRUNC('month',order_ts)::date AS month
+ FROM orders WHERE order_status='COMPLETED'
+)
+SELECT customer_id FROM months WHERE month=DATE '2025-01-01'
+EXCEPT
+SELECT customer_id FROM months WHERE month=DATE '2025-02-01';
+```
+
+EXCEPT is clear set difference; conditional aggregation generalizes to many periods.
+
+## Q102. Highest order-count customer per country.
+
+Aggregate order count by country/customer then rank within country. DENSE_RANK includes ties; ROW_NUMBER chooses one. Clarify current vs country at order time.
+
+## Q103. Monthly order value increased for 3 consecutive months.
+
+Aggregate customer/month/currency; fill missing months if calendar-consecutive semantics matter; compare current with LAG(1) and LAG(2). Decide whether no-activity month is zero or a break.
+
+## Q104. 90-day customer spend as of each order.
+
+Assume `order_value` contains one row per order:
+
+```sql
+SELECT cur.customer_id,cur.order_id,cur.order_ts,
+       SUM(prior.net_value) AS trailing_90_day_value
+FROM order_value cur
+JOIN order_value prior
+  ON prior.customer_id=cur.customer_id
+ AND prior.currency_code=cur.currency_code
+ AND prior.order_ts>cur.order_ts-INTERVAL '90 days'
+ AND prior.order_ts<=cur.order_ts
+GROUP BY cur.customer_id,cur.order_id,cur.order_ts;
+```
+
+Range self-join may be expensive. Consider supported time RANGE windows, daily aggregates, or incremental features.
+
+## Q105. How make SQL deterministic?
+
+Stable tie-breakers; explicit NULL order; timezone/decimal rules; source sequence; no physical row-order reliance or uncontrolled nondeterministic functions. Determinism is a production contract.
+
+# 12. Staff / Principal scenario questions
+
+## Q106. LEFT JOIN doubled dashboard revenue. Investigate.
+
+Reproduce source grain; profile keys on both sides; compare row counts after joins; find duplicate dimension versions/child rows; aggregate many side or fix temporal predicate; reconcile trusted totals; add cardinality tests. Never patch with DISTINCT or divide-by-two.
+
+## Q107. Product says revenue is wrong by 2%. What do you ask?
+
+Metric definition/grain; booked/recognized/collected/GMV/net sales; statuses/refunds; timezone/calendar; currency/FX date; late data/backfills; authoritative system; tolerance/cutoff. Align Finance, Product, Data on canonical contract before changing SQL.
+
+## Q108. Pipeline late but dashboard must refresh.
+
+Expose freshness/completeness; publish validated partitions or visibly mark partial/stale; avoid mixing incomplete ranges silently. Choose fresh-incomplete vs stale-complete with product owner and make state visible.
+
+## Q109. One customer owns 40% of events and creates stragglers.
+
+Measure distribution/task skew; isolate hot key; pre-aggregate; salt only when mathematically valid; adaptive execution if supported; test equivalence. Staff builds reusable patterns and monitoring.
+
+## Q110. SQL differs in PostgreSQL vs Snowflake/BigQuery. Why?
+
+Date arithmetic, NULL ordering, QUALIFY, FILTER, DISTINCT ON, MERGE semantics, timestamps/time zones, arrays/JSON, identifiers, optimizer behavior. Shared logical tests plus explicit per-engine implementations are safer than assuming portability.
+
+## Q111. Design tenant-safe analytics.
+
+Tenant key in model, row-level policies, least privilege, tenant-aware joins, layout considerations, cross-tenant leakage tests. Tenant isolation is security architecture, not only a WHERE predicate.
+
+## Q112. Prevent PII leakage.
+
+Classify fields; governed views; masking/tokenization; least privilege; row/column policy; access audit; safe export/logging; retention/deletion. Do not rely on SELECT * discipline.
+
+## Q113. Safely change shared revenue model.
+
+Lineage/impact; version metric; side-by-side/shadow validation; notify consumers; migrate with compatibility window; monitor; rollback path.
+
+## Q114. Query is cheap alone but expensive under concurrency.
+
+Inspect queueing, saturation, repeated scans, cache, slots/warehouse, duplicated transformations. Shared aggregates, workload isolation, quotas, scheduling, and ownership may be better than tuning one query.
+
+## Q115. SQL review standards for an organization?
+
+Grain, naming, determinism, NULL, incremental safety, cardinality assumptions, tests, PII, cost evidence, lineage, recovery. Automate mechanical checks; human review focuses on semantics and trade-offs.
+
+## Q116. When should a query become a curated model?
+
+When reused, business-critical, costly, hard to reproduce, or needs ownership/SLA. Promote to versioned, documented, tested model instead of copying into dashboards.
+
+## Q117. Normalization vs denormalization?
+
+Normalize operational models to reduce update anomalies; denormalize analytical models for usability/performance with governed duplication and lineage. Neither is universally superior.
+
+## Q118. Design financial reconciliation.
+
+Define authority/accounting grain; signed transaction types; counts/amounts/currencies/settlement dates; refunds/chargebacks/fees/FX; decimal precision/rounding; immutable runs and unmatched records; owned/auditable exceptions.
+
+## Q119. Interviewer challenges your query. Response?
+
+Restate requirement; isolate assumption; construct counterexample; adjust semantics; test minimal case. Do not defend code merely because it runs.
+
+## Q120. What makes SQL production-ready?
+
+Correct grain/semantics; deterministic behavior; NULL/duplicate handling; incremental/replay safety; performance evidence; observability; tests; security; ownership; recovery.
+
+# 13. Alternatives decision guide
+
+| Problem | Alternatives | Strong default | Caveat |
+|---|---|---|---|
+| Existence | JOIN / EXISTS / IN | EXISTS for existence-only | JOIN can multiply rows |
+| Absence | LEFT IS NULL / NOT EXISTS / NOT IN | NOT EXISTS | NOT IN NULL trap |
+| Latest row | ROW_NUMBER / MAX join / DISTINCT ON / QUALIFY | ROW_NUMBER | deterministic tie-break |
+| Top N ties | RANK / DENSE_RANK | clarify semantics | can exceed N rows |
+| Exact N | ROW_NUMBER | ROW_NUMBER | at most N |
+| Full-row dedupe | ROW_NUMBER / GROUP BY / DISTINCT | ROW_NUMBER | needs ordering |
+| Running total | Window SUM / self join | window SUM | explicit frame |
+| Calendar rolling | RANGE / date spine | date spine or supported RANGE | ROWS counts rows |
+| Reconciliation | counts / aggregates / anti-join / row diff / hashes | layered controls | no single proof |
+| Upsert | MERGE / ON CONFLICT | atomic native upsert | source unique per key |
+| SCD2 | snapshot diff / CDC intervalization | source-dependent | late history is hard |
+
+# 14. Dialect notes
+
+| Capability | PostgreSQL | Snowflake | BigQuery |
+|---|---|---|---|
+| Filter window | subquery/CTE | QUALIFY | QUALIFY |
+| DISTINCT ON | yes | different syntax | different syntax |
+| Date spine | generate_series | generator/calendar | GENERATE_DATE_ARRAY |
+| Upsert | ON CONFLICT | MERGE | MERGE |
+| JSON | JSON/JSONB | VARIANT | JSON/nested |
+| Physical focus | indexes/stats/vacuum/partitions | micro-partitions/clustering/warehouse | partitions/clustering/slots/shuffle |
+
+State the dialect in interviews.
+
+# 15. Forty coding drills
+
+Solve from a blank editor using the same dataset:
+
+1. Third-highest distinct spend per currency.
+2. Exactly three customers by spend with customer ID tie-breaker.
+3. Latest order per customer including customers with no orders.
+4. First successful payment per order.
+5. Orders whose second attempt succeeded.
+6. Products never purchased in completed order.
+7. Customers with cancelled orders and no completed order.
+8. Most distinct products bought by customer per country.
+9. Average units per order by category.
+10. Daily gross and net merchandise value.
+11. Top 10% customers by spend/currency.
+12. Second completed order within 30 days of first.
+13. Orders in three consecutive calendar months.
+14. Longest gap between completed orders.
+15. Events with no customer match.
+16. Purchases without preceding product view in same session.
+17. Median cart-to-purchase time.
+18. Sessions with >100 events.
+19. Products whose category changed in snapshots.
+20. SCD2 interval overlap detection.
+21. Late facts by event vs ingestion time.
+22. Top five countries by completed orders with ties.
+23. Percentage of orders with multiple payment attempts.
+24. Reconcile payments to order value by day/currency.
+25. Source/target mismatches by key/attribute.
+26. Orphan order items and payments.
+27. Compare exact/approx distinct counts and explain error tolerance.
+28. Zero-filled daily revenue.
+29. Seven-calendar-day rolling average.
+30. 90-day trailing customer spend.
+31. Invalid status transitions.
+32. Status duration as of timestamp.
+33. Deduplicate CDC and prove idempotency.
+34. Apply out-of-order CDC without state regression.
+35. Bounded backfill with stable high watermark.
+36. Rewrite non-sargable filter and compare plans.
+37. Diagnose many-to-many join inflation.
+38. Tenant-safe query and isolation controls.
+39. PII-safe customer analytics view.
+40. Financial reconciliation with refunds and fees.
+
+# 16. Interview communication framework
+
+For every non-trivial SQL question:
+
+1. Clarify metric and business rule.
+2. Declare result grain.
+3. State source grain and keys.
+4. Clarify NULLs, ties, deletes, late data, timezone, and currency.
+5. Write simplest correct query.
+6. Test counterexamples.
+7. Discuss scan, shuffle, sort, skew, pruning, concurrency.
+8. Discuss incremental/replay/reconciliation/observability.
+9. Compare alternatives.
+10. State trade-offs at expected scale.
+
+Useful statements when backed by evidence:
+- “I want to establish result grain before joining.”
+- “This child is one-to-many; I will aggregate before joining measures.”
+- “Timestamp may not uniquely order records; I need deterministic tie-breaking.”
+- “ROWS counts rows, not calendar days.”
+- “I will validate plan and cardinalities rather than assume this rewrite is faster.”
+- “Equal row counts do not prove source-target equality.”
+- “I will use source sequence/LSN for CDC ordering when available.”
+- “SQL cannot decide the business metric; we need an agreed contract.”
+
+# 17. What interviewers evaluate at senior compensation levels
+
+| Signal | Weak | Strong |
+|---|---|---|
+| Correctness | Happy path | Grain, ties, NULL, missing periods, duplicates |
+| SQL depth | Memorized syntax | Semantics drive choice of joins/windows/aggregation |
+| Performance | “Add index” | Plans, cardinality, scan/shuffle/spill, workload |
+| Data engineering | One-off query | Incremental, idempotent, replayable, reconcilable |
+| Architecture | One query | Shared models, ownership, contracts, platform trade-offs |
+| Leadership | Clever answer | Standards, stakeholder alignment, mentoring, risk |
+| Communication | Jumps to code | Clarifies, compares, tests assumptions |
+
+**Lead:** “I aggregate payments and items to order grain before joining, add uniqueness tests, and reconcile totals.”
+
+**Staff:** “I standardize order-grain financial facts and publish tested metric models and reusable reconciliation controls.”
+
+**Principal:** “I align Finance, Product, and Data on canonical definitions, ownership, freshness/correctness SLOs, and platform patterns; then govern adoption and exceptions.”
+
+# 18. Revision checklist
+
+- [ ] SQL semantics, joins, grouping, NULL, set operations
+- [ ] ROW_NUMBER, RANK, DENSE_RANK, LAG, LEAD, window frames
+- [ ] Running totals, rolling windows, percentiles, gaps/islands
+- [ ] Date spine, cohorts, funnels, retention, sessionization
+- [ ] Grain, cardinality, dedupe, deterministic ordering
+- [ ] CDC, watermark, MERGE/upsert, deletes
+- [ ] Late facts/dimensions, SCD1/2/3
+- [ ] Reconciliation, data quality, quarantine, auditability
+- [ ] EXPLAIN/query profiles, pruning, indexes, clustering, skew
+- [ ] Replay, backfill, schema evolution, data contracts
+- [ ] PII, tenant isolation, access policies, retention
+- [ ] Explain alternatives and trade-offs at Lead/Staff/Principal level
+
+# Official documentation
+
+- PostgreSQL: https://www.postgresql.org/docs/current/
+- PostgreSQL window functions: https://www.postgresql.org/docs/current/functions-window.html
+- PostgreSQL EXPLAIN: https://www.postgresql.org/docs/current/using-explain.html
+- Snowflake QUALIFY: https://docs.snowflake.com/en/sql-reference/constructs/qualify
+- Snowflake query profile: https://docs.snowflake.com/en/user-guide/ui-query-profile
+- BigQuery SQL syntax: https://cloud.google.com/bigquery/docs/reference/standard-sql/query-syntax
+- BigQuery partitioned tables: https://cloud.google.com/bigquery/docs/partitioned-tables
+- SQL Server execution plans: https://learn.microsoft.com/en-us/sql/relational-databases/performance/execution-plans
+
+---
+
+# END OF TOPIC 03 — SQL
+
+All questions use one connected e-commerce model. Add edge cases to the same domain rather than switching to unrelated schemas.
